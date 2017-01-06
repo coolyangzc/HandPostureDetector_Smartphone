@@ -1,0 +1,2 @@
+cd sdcard
+sh touch.sh YZC Task2

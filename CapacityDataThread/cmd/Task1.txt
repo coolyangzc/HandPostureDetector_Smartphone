@@ -1,0 +1,2 @@
+cd sdcard
+sh capacity.sh Task1
