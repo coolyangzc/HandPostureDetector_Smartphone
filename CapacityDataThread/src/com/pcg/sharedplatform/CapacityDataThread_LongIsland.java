@@ -1,9 +1,11 @@
+package com.pcg.sharedplatform;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-public class CapacityDataThread implements Runnable {
+public class CapacityDataThread_LongIsland implements Runnable {
 	
 	private volatile Thread thread;
 	private String dirName;

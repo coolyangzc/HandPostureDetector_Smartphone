@@ -1,8 +1,10 @@
+package com.pcg.sharedplatform;
+
 import java.util.Scanner;
 
 public class Main {
 	public static void main(String[] args) {
-		CapacityDataThread cthr = new CapacityDataThread();
+		CapacityDataThread_LongIsland cthr = new CapacityDataThread_LongIsland();
 		System.out.println("Begin");
 		cthr.start("Task1");
 		System.out.println("Pass");
