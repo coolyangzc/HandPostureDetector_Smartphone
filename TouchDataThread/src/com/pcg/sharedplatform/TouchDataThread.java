@@ -37,7 +37,7 @@ public class TouchDataThread implements Runnable {
 			System.out.println("TouchDataThread - successful interrupt");
 			return;
 		}
-		System.out.println("TouchDataThread - unexcepted finish");
+		System.out.println("TouchDataThread - unexpected finish");
 	}
 	
 	public void start(String userName, String taskName) {
