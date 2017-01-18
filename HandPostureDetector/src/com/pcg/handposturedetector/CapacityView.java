@@ -6,13 +6,14 @@ import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Shader.TileMode;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.RectShape;
-import android.graphics.drawable.shapes.RoundRectShape;
 import android.util.Log;
 import android.view.View;
 
@@ -21,16 +22,35 @@ public class CapacityView extends View implements Runnable {
 	private final int W = 1080;
 	private final int H = 1920;
 	private final int THRESHOLD = 50;
-	private Paint paint = null;
+	private Paint capaPaint = null, picPaint = null;
+	private Bitmap bitmap = null;
+	private BitmapShader v_l, v_r;
 	private Process ps = null;
 	
 	int[] capaVal = new int[28 * 16];
 	
 	public CapacityView(Context context) {
 		super(context);
-		paint = new Paint();
+		
+		loadResources();
+		
+		capaPaint = new Paint();
+		capaPaint.setStyle(Paint.Style.FILL);
+		picPaint = new Paint();
+		picPaint.setAntiAlias(true);
+		picPaint.setAlpha(200);
+		
 		Thread thread = new Thread(this);
 		thread.start();
+	}
+	
+	private void loadResources() {
+		BitmapFactory.Options opts = new BitmapFactory.Options();
+		opts.inSampleSize = 2;
+		bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.v_l, opts);
+		v_l = new BitmapShader(bitmap, TileMode.CLAMP, TileMode.CLAMP);
+		bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.v_r, opts);
+		v_r = new BitmapShader(bitmap, TileMode.CLAMP, TileMode.CLAMP);
 	}
 	
 	private String getFrame() {
@@ -63,10 +83,6 @@ public class CapacityView extends View implements Runnable {
 	@Override
     protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
-		
-        paint.setColor(Color.WHITE);
-
-        paint.setStyle(Paint.Style.FILL);
         int squareWidth = W / 16;
         int squareHeight = H / 28;
         int max = 0;
@@ -83,8 +99,8 @@ public class CapacityView extends View implements Runnable {
             		colorGradient = 0;
             	else
             		colorGradient = (int)((double)capaVal[i * 28 + j] / max * 255);
-                paint.setColor(Color.rgb(colorGradient, colorGradient, colorGradient));
-                canvas.drawRect(squareWidth * i, squareHeight * j, squareWidth * (i + 1), squareHeight * (j + 1), paint);
+            	capaPaint.setColor(Color.rgb(colorGradient, colorGradient, colorGradient));
+                canvas.drawRect(squareWidth * i, squareHeight * j, squareWidth * (i + 1), squareHeight * (j + 1), capaPaint);
                 x += colorGradient * (i + 0.5f);
                 y += colorGradient * (j + 0.5f);
                 sum += colorGradient;
@@ -101,9 +117,6 @@ public class CapacityView extends View implements Runnable {
             	float dy = y - j;
             	if (dx*dy >=0) dx = Math.abs(dx);
             	else dx = - Math.abs(dx);
-            	Log.d("dx", Float.toString(dx));
-            	Log.d("capaVal", Integer.toString(capaVal[i*28+j]));
-            	Log.d("result", Float.toString(dx * capaVal[i*28+j]));
             	dirX += dx * capaVal[i*28+j];
             	dirY += dy * capaVal[i*28+j];
             }
@@ -111,15 +124,14 @@ public class CapacityView extends View implements Runnable {
         Log.d("dirX", Float.toString(dirX));
         x = x * squareWidth;
         y = y * squareHeight;
-        paint.setColor(Color.RED);
-        canvas.drawCircle(x, y, 32, paint);
-        Drawable d;
+        capaPaint.setColor(Color.RED);
+        canvas.drawCircle(x, y, 32, capaPaint);
         if (dirX >= 0)
-        	d = getResources().getDrawable(R.drawable.v_r);
+        	picPaint.setShader(v_r);
         else
-        	d = getResources().getDrawable(R.drawable.v_l);
-        d.setBounds(300, 50, 419 + 300, 268 + 50);
-        d.draw(canvas);
+        	picPaint.setShader(v_l);
+        
+        canvas.drawRoundRect(0, 0, 419, 268, 50, 50, picPaint);
 	}
 
 	@Override
