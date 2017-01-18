@@ -34,17 +34,12 @@ public class CapacityView extends View implements Runnable {
 	private BitmapShader v_l, v_r, no;
 	
 	private Process ps = null;
-	private SensorManager sensorManager;
-	private SensorEventListener sensorEventListener;
-	private float[] gravity = new float[3], 
-					geomagnetic = new float[3],
-					orientation = new float[3],
-					matR = new float[9];
-	private float touchX, touchY;
+	
 	
 	private int[] capaVal = new int[28 * 16];
 	
-	public GestureDetector gestureDetector;
+	public HandPostureDetector hDetector;
+	
 	
 	public CapacityView(Context context) {
 		super(context);
@@ -57,6 +52,7 @@ public class CapacityView extends View implements Runnable {
 	}
 	
 	private void initialize() {
+		
 		//Setup Paints
 		capaPaint = new Paint();
 		capaPaint.setStyle(Paint.Style.FILL);
@@ -77,50 +73,8 @@ public class CapacityView extends View implements Runnable {
 		v_r = new BitmapShader(bitmap, TileMode.CLAMP, TileMode.CLAMP);
 		no = null;
 		
-		//Register Sensors
-		sensorEventListener = new SensorEventListener() {
-			
-			@Override
-			public void onSensorChanged(SensorEvent event) {
-				switch(event.sensor.getType()) {
-				case Sensor.TYPE_ACCELEROMETER:
-					gravity[0] = event.values[0];
-					gravity[1] = event.values[1];
-					gravity[2] = event.values[2];
-					break;
-				case Sensor.TYPE_MAGNETIC_FIELD:
-					geomagnetic[0] = event.values[0];
-					geomagnetic[1] = event.values[1];
-					geomagnetic[2] = event.values[2];
-					break;
-				}
-			}
-			
-			@Override
-			public void onAccuracyChanged(Sensor sensor, int accuracy) {
-				// TODO Auto-generated method stub
-				
-			}
-		};
-		sensorManager = (SensorManager)ctx.getSystemService(ctx.SENSOR_SERVICE);
-		sensorManager.registerListener(sensorEventListener, 
-				sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), 
-				SensorManager.SENSOR_DELAY_FASTEST);
-		sensorManager.registerListener(sensorEventListener, 
-				sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD), 
-				SensorManager.SENSOR_DELAY_FASTEST);
-		
-		//Gesture Detector
-		SimpleOnGestureListener onGestureListener = new SimpleOnGestureListener() {
-			
-			@Override
-			public boolean onSingleTapUp(MotionEvent e) {
-				touchX = e.getX();
-				touchY = e.getY();
-	            return true;
-	        }
-		};
-		gestureDetector = new GestureDetector(ctx, onGestureListener);
+		//Register Sensors & Gesture Detector
+		hDetector = new HandPostureDetector(ctx, THRESHOLD);
 		
 	}
 	
@@ -154,6 +108,9 @@ public class CapacityView extends View implements Runnable {
 	@Override
     protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
+		hDetector.updateCapa(capaVal);
+		hDetector.calc();
+		
         int squareWidth = W / 16;
         int squareHeight = H / 28;
         int max = 0;
@@ -163,7 +120,7 @@ public class CapacityView extends View implements Runnable {
             }
         }
         int colorGradient;
-        float x = 0, y = 0, sum = 0;
+        
         for (int i = 0; i < 16; i++) {
             for (int j = 0; j < 28; j++) {
             	if (capaVal[i*28+j] <= THRESHOLD)
@@ -172,53 +129,26 @@ public class CapacityView extends View implements Runnable {
             		colorGradient = (int)((double)capaVal[i * 28 + j] / max * 255);
             	capaPaint.setColor(Color.rgb(colorGradient, colorGradient, colorGradient));
                 canvas.drawRect(squareWidth * i, squareHeight * j, squareWidth * (i + 1), squareHeight * (j + 1), capaPaint);
-                x += colorGradient * (i + 0.5f);
-                y += colorGradient * (j + 0.5f);
-                sum += colorGradient;
             }
         }
-        x /= sum;
-        y /= sum;
-        float dirX = 0, dirY = 0;
-        for (int i = 0; i < 16; i++) {
-            for (int j = 0; j < 28; j++) {
-            	if (capaVal[i*28+j] <= THRESHOLD)
-            		continue;
-            	float dx = x - i;
-            	float dy = y - j;
-            	if (dx*dy >=0) dx = Math.abs(dx);
-            	else dx = - Math.abs(dx);
-            	dirX += dx * capaVal[i*28+j];
-            	dirY += dy * capaVal[i*28+j];
-            }
-        }
-        x = x * squareWidth;
-        y = y * squareHeight;
         capaPaint.setColor(Color.RED);
-        canvas.drawCircle(x, y, 32, capaPaint);
+        canvas.drawCircle(hDetector.gravityCenter[0] * squareWidth, 
+        		hDetector.gravityCenter[1] * squareHeight, 32, capaPaint);
         
         capaPaint.setColor(Color.GREEN);
-        canvas.drawCircle(touchX, touchY, 32, capaPaint);
+        canvas.drawCircle(hDetector.touchCenter[0], hDetector.touchCenter[1], 32, capaPaint);
         
-        if (dirX >= 0)
-        	picPaint.setShader(v_r);
-        else
-        	picPaint.setShader(v_l);
-        if (sum <= 1000)
-        	picPaint.setShader(no);
+        
         canvas.drawRoundRect(0, 0, 419, 268, 50, 50, picPaint);
         
         String debugInfo = "";
-        SensorManager.getRotationMatrix(matR, null, gravity, geomagnetic);
-        SensorManager.getOrientation(matR, orientation);
-        debugInfo += String.format("%.0f", orientation[0] / Math.PI * 180) + "\n";
-        debugInfo += String.format("%.0f", orientation[1] / Math.PI * 180) + "\n";
-        debugInfo += String.format("%.0f", orientation[2] / Math.PI * 180) + "\n";
+        
+        debugInfo += String.format("%.0f", hDetector.orientation[0] / Math.PI * 180) + "\n";
+        debugInfo += String.format("%.0f", hDetector.orientation[1] / Math.PI * 180) + "\n";
+        debugInfo += String.format("%.0f", hDetector.orientation[2] / Math.PI * 180) + "\n";
         canvas.drawText(debugInfo, 10, 330, textPaint);
 	}
 
-	
-	
 	@Override
 	public void run() {
 		long startTime = System.currentTimeMillis();

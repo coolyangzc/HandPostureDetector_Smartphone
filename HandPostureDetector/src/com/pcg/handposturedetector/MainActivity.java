@@ -21,6 +21,6 @@ public class MainActivity extends Activity {
 	
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		return cView.gestureDetector.onTouchEvent(event);
+		return cView.hDetector.gestureDetector.onTouchEvent(event);
 	}
 }
