@@ -13,7 +13,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Shader.TileMode;
-import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.View;
 
@@ -21,10 +20,10 @@ public class CapacityView extends View implements Runnable {
 	
 	private final int W = 1080;
 	private final int H = 1920;
-	private final int THRESHOLD = 50;
+	private final int THRESHOLD = 64;
 	private Paint capaPaint = null, picPaint = null;
 	private Bitmap bitmap = null;
-	private BitmapShader v_l, v_r;
+	private BitmapShader v_l, v_r, no;
 	private Process ps = null;
 	
 	int[] capaVal = new int[28 * 16];
@@ -38,6 +37,7 @@ public class CapacityView extends View implements Runnable {
 		capaPaint.setStyle(Paint.Style.FILL);
 		picPaint = new Paint();
 		picPaint.setAntiAlias(true);
+		picPaint.setColor(Color.WHITE);
 		picPaint.setAlpha(200);
 		
 		Thread thread = new Thread(this);
@@ -51,6 +51,7 @@ public class CapacityView extends View implements Runnable {
 		v_l = new BitmapShader(bitmap, TileMode.CLAMP, TileMode.CLAMP);
 		bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.v_r, opts);
 		v_r = new BitmapShader(bitmap, TileMode.CLAMP, TileMode.CLAMP);
+		no = null;
 	}
 	
 	private String getFrame() {
@@ -121,15 +122,17 @@ public class CapacityView extends View implements Runnable {
             	dirY += dy * capaVal[i*28+j];
             }
         }
-        Log.d("dirX", Float.toString(dirX));
         x = x * squareWidth;
         y = y * squareHeight;
         capaPaint.setColor(Color.RED);
         canvas.drawCircle(x, y, 32, capaPaint);
+        
         if (dirX >= 0)
         	picPaint.setShader(v_r);
         else
         	picPaint.setShader(v_l);
+        if (sum <= 1000)
+        	picPaint.setShader(no);
         
         canvas.drawRoundRect(0, 0, 419, 268, 50, 50, picPaint);
 	}
