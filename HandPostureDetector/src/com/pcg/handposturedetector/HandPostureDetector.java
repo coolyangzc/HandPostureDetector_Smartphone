@@ -39,6 +39,9 @@ public class HandPostureDetector {
 	
 	private HistoryValueContainer oriY = new HistoryValueContainer(500, 0.01);
 	
+	private final int W = 1080;
+	private final int H = 1920;
+	
 	HandPostureDetector(Context context, int THR) {
 		ctx = context;
 		THRESHOLD = THR;
@@ -81,6 +84,29 @@ public class HandPostureDetector {
 				touchCenter[0] = e.getX();
 				touchCenter[1] = e.getY();
 				
+				double rotY = orientation[2] / Math.PI * 180;
+				
+				int conf = 5;
+				long eTime = e.getEventTime();
+				if (touchCenter[1] < W / 2)
+					conf *= 2;
+				if (touchCenter[0] < W / 3) {
+					if (rotY > 5) 
+						for (int i=0; i<conf; ++i)
+							confidenceR.update((rotY - 5) / 10, eTime);
+					else if (rotY < 0)
+						for (int i=0; i<conf; ++i)
+							confidenceL.update(-rotY / 5, eTime);
+				}
+				if (touchCenter[0] > W / 3 * 2) {
+					if (rotY > 0) 
+						for (int i=0; i<conf; ++i)
+							confidenceR.update(rotY / 5, eTime);
+					else if (rotY < -5)
+						for (int i=0; i<conf; ++i)
+							confidenceL.update(-(rotY + 5) / 10, eTime);
+				}
+				
 	            return true;
 	        }
 		};
@@ -109,11 +135,11 @@ public class HandPostureDetector {
         y /= sum;
         float dirL = 0, dirR = 0, dx, dy;
         for (int i = 0; i < 16; i++) {
-            for (int j = 0; j < 28; j++) {
+            for (int j = 0; j < 20; j++) {
             	if (capa[i*28+j] <= THRESHOLD)
             		continue;
-            	dx = x - i;
-            	dy = y - j;
+            	dx = i - x;
+            	dy = j - y;
             	dirL += capa[i*28+j] * Math.abs(dx * 0.7071 + dy * -0.7071);
             	dirR += capa[i*28+j] * Math.abs(dx * 0.7071 + dy * 0.7071);
             }
@@ -121,8 +147,11 @@ public class HandPostureDetector {
         gravityCenter[0] = x;
         gravityCenter[1] = y;
         deltaOriY = orientation[2] - oriY.value;
-        long curTime = SystemClock.elapsedRealtime();
+        long curTime = SystemClock.uptimeMillis();
         oriY.update(orientation[2], curTime);
+        
+        //Mystic
+        dirL *= 1.2f;
         if (dirL * dirR != 0) {
 	        if (dirL > dirR) {
 	        	confidenceL.update(Math.min(1, (dirL - dirR) / dirR * 2),  curTime);
