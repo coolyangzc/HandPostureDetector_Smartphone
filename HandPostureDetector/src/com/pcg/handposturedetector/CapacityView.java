@@ -21,7 +21,7 @@ public class CapacityView extends View implements Runnable {
 	private final int W = 1080;
 	private final int H = 1920;
 	private final int THRESHOLD = 64;
-	private Paint capaPaint = null, picPaint = null;
+	private Paint capaPaint = null, picPaint = null, textPaint = null;
 	private Bitmap bitmap = null;
 	private BitmapShader v_l, v_r, no;
 	private Process ps = null;
@@ -33,18 +33,21 @@ public class CapacityView extends View implements Runnable {
 		
 		loadResources();
 		
+		Thread thread = new Thread(this);
+		thread.start();
+	}
+	
+	private void loadResources() {
 		capaPaint = new Paint();
 		capaPaint.setStyle(Paint.Style.FILL);
 		picPaint = new Paint();
 		picPaint.setAntiAlias(true);
 		picPaint.setColor(Color.WHITE);
 		picPaint.setAlpha(200);
+		textPaint = new Paint();
+		textPaint.setColor(Color.YELLOW);
+		textPaint.setTextSize(64);
 		
-		Thread thread = new Thread(this);
-		thread.start();
-	}
-	
-	private void loadResources() {
 		BitmapFactory.Options opts = new BitmapFactory.Options();
 		opts.inSampleSize = 2;
 		bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.v_l, opts);
@@ -52,6 +55,7 @@ public class CapacityView extends View implements Runnable {
 		bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.v_r, opts);
 		v_r = new BitmapShader(bitmap, TileMode.CLAMP, TileMode.CLAMP);
 		no = null;
+		
 	}
 	
 	private String getFrame() {
@@ -135,6 +139,8 @@ public class CapacityView extends View implements Runnable {
         	picPaint.setShader(no);
         
         canvas.drawRoundRect(0, 0, 419, 268, 50, 50, picPaint);
+        
+        canvas.drawText(Float.toString(dirX), 10, 330, textPaint);
 	}
 
 	@Override
