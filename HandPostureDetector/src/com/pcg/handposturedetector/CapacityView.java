@@ -132,8 +132,9 @@ public class CapacityView extends View implements Runnable {
             }
         }
         capaPaint.setColor(Color.RED);
-        canvas.drawCircle(hDetector.gravityCenter[0] * squareWidth, 
-        		hDetector.gravityCenter[1] * squareHeight, 32, capaPaint);
+        for (int i=0; i<hDetector.colorNum; ++i)
+        	canvas.drawCircle(hDetector.gravityCenter[i][0] * squareWidth, 
+        			hDetector.gravityCenter[i][1] * squareHeight, 32, capaPaint);
         
         capaPaint.setColor(Color.GREEN);
         canvas.drawCircle(hDetector.touchCenter[0], hDetector.touchCenter[1], 32, capaPaint);
