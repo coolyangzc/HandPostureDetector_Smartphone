@@ -138,15 +138,16 @@ public class CapacityView extends View implements Runnable {
         capaPaint.setColor(Color.GREEN);
         canvas.drawCircle(hDetector.touchCenter[0], hDetector.touchCenter[1], 32, capaPaint);
         
+        picPaint.setShader(no);
+        if (hDetector.confidenceL.value > hDetector.confidenceR.value + 0.1f)
+        	picPaint.setShader(v_l);
+        if (hDetector.confidenceR.value > hDetector.confidenceL.value + 0.1f)
+        	picPaint.setShader(v_r);
         
         canvas.drawRoundRect(0, 0, 419, 268, 50, 50, picPaint);
         
-        String debugInfo = "";
         
-        debugInfo += String.format("%.0f", hDetector.orientation[0] / Math.PI * 180) + "\n";
-        debugInfo += String.format("%.0f", hDetector.orientation[1] / Math.PI * 180) + "\n";
-        debugInfo += String.format("%.0f", hDetector.orientation[2] / Math.PI * 180) + "\n";
-        canvas.drawText(debugInfo, 10, 330, textPaint);
+        canvas.drawText(hDetector.debugInfo, 10, 330, textPaint);
 	}
 
 	@Override
