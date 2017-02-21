@@ -85,7 +85,7 @@ public class CapacityView extends View implements Runnable {
 			ps.waitFor();
 			BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(ps.getInputStream()));
 	        while ((line = bufferedreader.readLine()) != null)
-	            frame = frame + line + "\n";
+	            frame += line + "\n";
 	        ps.destroy();
 	        ps = null;
 		} catch (IOException e) {
@@ -146,7 +146,6 @@ public class CapacityView extends View implements Runnable {
         	picPaint.setShader(v_r);
         
         canvas.drawRoundRect(0, 0, 419, 268, 50, 50, picPaint);
-        
         canvas.drawText(hDetector.debugInfo, 10, 330, textPaint);
 	}
 
