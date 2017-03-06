@@ -8,8 +8,12 @@ namespace SentonsPlatform
 {
     class Program
     {
+        
         static void Main(string[] args)
         {
+            SentonsPlatform platform = new SentonsPlatform("User.txt", "Exp.txt");
+            platform.Run();
+            //while (true);
         }
     }
 }

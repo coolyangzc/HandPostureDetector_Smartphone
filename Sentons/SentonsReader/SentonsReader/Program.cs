@@ -19,7 +19,7 @@ namespace SentonsReader
             {
                 reader.read();
                 System.Console.Write("--------------------------------------------------\n");
-                System.Threading.Thread.Sleep(1000);
+                //System.Threading.Thread.Sleep(1000);
             }
             //reader.disconnect();
 
