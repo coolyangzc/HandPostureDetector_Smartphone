@@ -12,7 +12,7 @@ namespace SentonsPlatform
     {
         static TouchReader.Reader reader;
         static StreamWriter writer;
-        static long startTime;
+        static DateTime startTime;
         Thread thread;
 
         public SentonsReader()
@@ -44,7 +44,7 @@ namespace SentonsPlatform
         static void writing()
         {
             int frame = 0;
-            startTime = DateTime.Now.ToFileTime();
+            startTime = DateTime.Now;
             while(true)
             {
                 recordNewTouches(frame);
@@ -65,8 +65,8 @@ namespace SentonsPlatform
             newestTouchSet = reader.LatestTouchSet;
             if (newestTouchSet.touchList.Count == 0)
                 return true;
-
-            writer.Write(string.Format("{0} {1} {2}", frame, DateTime.Now.ToFileTime() - startTime, newestTouchSet.touchList.Count));
+            TimeSpan ts = DateTime.Now - startTime;
+            writer.Write(string.Format("{0} {1} {2}", frame, ts.TotalMilliseconds, newestTouchSet.touchList.Count));
             foreach (TouchReader.TouchReport touchReportEntry in newestTouchSet.touchList)
             {
                 writer.Write(string.Format(" {0} {1} {2} {3} {4} {5}",
