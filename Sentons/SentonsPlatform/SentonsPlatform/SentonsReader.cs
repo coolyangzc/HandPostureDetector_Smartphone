@@ -12,9 +12,8 @@ namespace SentonsPlatform
     {
         static TouchReader.Reader reader;
         static StreamWriter writer;
-        static DateTime startTime;
+        static DateTime startTime, lastTime;
         Thread thread;
-
         public SentonsReader()
         {
             reader = new TouchReader.Reader();
@@ -44,12 +43,12 @@ namespace SentonsPlatform
         static void writing(Object stateInfo)
         {
             int frame = 0;
-            startTime = DateTime.Now;
+            startTime = lastTime = DateTime.Now;
             while(true)
             {
                 recordNewTouches(frame);
                 frame++;
-                Thread.Sleep(10);
+                Thread.Sleep(9);
             }
         }
 
