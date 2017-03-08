@@ -50,6 +50,9 @@ namespace SentonsPlatform
             {
                 RunMission(missions[expID]);
             }
+            Console.Clear();
+            Console.WriteLine("实验结束！感谢您的协作与配合！");
+            Console.ReadKey();
         }
 
         void RunMission(string mission)
