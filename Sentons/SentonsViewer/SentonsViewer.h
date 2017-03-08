@@ -2,6 +2,7 @@
 #define SENTONSVIEWER_H
 
 #include <string>
+#include "opencv2\opencv.hpp"
 
 class SentonsViewer
 {
@@ -12,7 +13,8 @@ class SentonsViewer
         void display();
     private:
         std::string fileName;
-        void drawTouch(double pos1, double pos2);
+        cv::Mat img, initImg;
+        void readOneTouch(std::ifstream& fin);
 };
 
 #endif // SENTONSVIEWER_H

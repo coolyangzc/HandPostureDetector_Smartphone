@@ -6,10 +6,12 @@
 	<cmath>
 	<string>
 
-1488878621 source:d:\我的坚果铺子\tsinghua\pcg\handposture\handposturedetector_smartphone\sentons\sentonsviewer\sentonsviewer.cpp
+1488943727 source:d:\我的坚果铺子\tsinghua\pcg\handposture\handposturedetector_smartphone\sentons\sentonsviewer\sentonsviewer.cpp
+	"Common.h"
 	"SentonsViewer.h"
-	"opencv2\opencv.hpp"
 	<cstdio>
+	<fstream>
+	<iostream>
 
 1384335861 d:\software\opencv 2.4.10\mingw\debug\install\include\opencv2\opencv.hpp
 	"opencv2/core/core_c.h"
@@ -167,10 +169,11 @@
 	<set>
 	<valarray>
 
-1488878883 source:d:\我的坚果铺子\tsinghua\pcg\handposture\handposturedetector_smartphone\sentons\sentonsviewer\main.cpp
+1488940655 source:d:\我的坚果铺子\tsinghua\pcg\handposture\handposturedetector_smartphone\sentons\sentonsviewer\main.cpp
 	"SentonsViewer.h"
 	"opencv2\opencv.hpp"
 
-1488878527 d:\我的坚果铺子\tsinghua\pcg\handposture\handposturedetector_smartphone\sentons\sentonsviewer\sentonsviewer.h
+1488943911 d:\我的坚果铺子\tsinghua\pcg\handposture\handposturedetector_smartphone\sentons\sentonsviewer\sentonsviewer.h
 	<string>
+	"opencv2\opencv.hpp"
 

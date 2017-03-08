@@ -5,5 +5,6 @@ using namespace cv;
 int main()
 {
     SentonsViewer viewer("0.txt");
+    viewer.display();
     return 0;
 }
