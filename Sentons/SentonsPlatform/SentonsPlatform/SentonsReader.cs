@@ -41,7 +41,7 @@ namespace SentonsPlatform
             thread.Abort();
         }
 
-        static void writing()
+        static void writing(Object stateInfo)
         {
             int frame = 0;
             startTime = DateTime.Now;
@@ -49,6 +49,7 @@ namespace SentonsPlatform
             {
                 recordNewTouches(frame);
                 frame++;
+                Thread.Sleep(10);
             }
         }
 
@@ -63,8 +64,8 @@ namespace SentonsPlatform
             }
 
             newestTouchSet = reader.LatestTouchSet;
-            if (newestTouchSet.touchList.Count == 0)
-                return true;
+            //if (newestTouchSet.touchList.Count == 0)
+            //return true;
             TimeSpan ts = DateTime.Now - startTime;
             writer.Write(string.Format("{0} {1} {2}", frame, ts.TotalMilliseconds, newestTouchSet.touchList.Count));
             foreach (TouchReader.TouchReport touchReportEntry in newestTouchSet.touchList)

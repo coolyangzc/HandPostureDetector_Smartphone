@@ -47,8 +47,7 @@ void SentonsViewer::readOneTouch(ifstream& fin)
         x = RIGHT_PIXEL;
     else
         x = LEFT_PIXEL;
-    line(img, Point(x, posU), Point(x, posD), Scalar(255, 0, 0), 3);
-
+    line(img, Point(x, posU), Point(x, posD), Scalar(255, 0, forceLvl * 5), 3);
 }
 
 void SentonsViewer::display()
