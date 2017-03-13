@@ -34,12 +34,7 @@ def process(fd, catg):
             for i in range(2):
                 for j in range(PIXELS):
                     outfd.write(str(edge[i][j]) + ' ')
-            for i in range(len(category)):
-                if (catg == i):
-                    outfd.write('1 ')
-                else:
-                    outfd.write('0 ')
-            outfd.write('\n')
+            outfd.write(str(catg) + '\n')
             
 
 outfd.write(str(PIXELS) + '\n') 
