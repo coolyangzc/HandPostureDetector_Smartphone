@@ -61,7 +61,7 @@ namespace SentonsPlatform
             string fileName = userName + "/" + components[0] + ".txt";
 
             Console.Clear();
-            Console.WriteLine("实验" + components[0]);
+            Console.WriteLine("实验" + components[0] + '\n');
             Console.WriteLine(components[2]);
             Console.WriteLine(components[3]);
             Console.Write("\n请输入指令(P:前一任务 任意:开始任务):");
