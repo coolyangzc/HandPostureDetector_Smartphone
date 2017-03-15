@@ -4,6 +4,7 @@ import numpy as np
 from sklearn import svm
 from sklearn import tree
 from sklearn import neighbors
+from sklearn.externals import joblib
 from sklearn.model_selection import KFold
 
 print 'File reading...'
@@ -32,9 +33,10 @@ y = y[:]
 X = np.array(X)
 y = np.array(y)
 
-print 'SVM training...'
+print 'Start training on ' + str(len(X)) + ' data'
 sys.stdout.flush()
 
+'''
 kf = KFold(n_splits = 5, shuffle = True)
 kf.get_n_splits(X)
 error = []
@@ -48,7 +50,14 @@ for k, (train_index, test_index) in enumerate(kf.split(X, y)):
     answer_test = clf.predict(X_test)
     print('test accuracy: ' + str(np.mean(answer_test == y_test)))
     error.append(np.mean(answer_test == y_test))    
-
+    
 # Averaging
 print "===========Final Result==========="
 print "Final accuracy: " + str(np.mean(error))
+'''
+
+clf = svm.SVC()
+clf.fit(X, y)
+joblib.dump(clf, 'svm.pkl')
+
+
