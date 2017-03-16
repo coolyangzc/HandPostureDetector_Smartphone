@@ -21,15 +21,14 @@ X = []
 y = []
 
 for line in lines:
-    data = map(int, line.split(' '))
-    X.append(data[:-1])
-    y.append(data[-1])
+    data = line.split(' ')
+    X.append(map(float, data[:-1]))
+    y.append(int(data[-1]))
 
 print 'Loaded ' + str(len(X)) + ' data successfully'
 
 X = X[:]
 y = y[:]
-
 X = np.array(X)
 y = np.array(y)
 
@@ -43,7 +42,7 @@ error = []
 for k, (train_index, test_index) in enumerate(kf.split(X, y)):
     X_train, X_test = X[train_index], X[test_index]
     y_train, y_test = y[train_index], y[test_index]
-    clf = neighbors.KNeighborsClassifier(30, 'distance', 'auto', p = 1)
+    clf = tree.DecisionTreeClassifier()
     clf.fit(X_train, y_train)
     answer_train = clf.predict(X_train)      
     print('training accuracy: '+ str(np.mean(answer_train == y_train)))
@@ -56,13 +55,23 @@ print "===========Final Result==========="
 print "Final accuracy: " + str(np.mean(error))
 '''
 
+#Support Vector Machine
 '''
 clf = svm.SVC()
 clf.fit(X, y)
 joblib.dump(clf, 'svm.pkl')
 '''
 
+#K Nearest Neighbors
 
-clf = joblib.load('svm.pkl') 
-answer = clf.predict(X)
-print('Overall accuracy: ' + str(np.mean(answer == y)))
+clf = neighbors.KNeighborsClassifier(100, 'distance', 'auto', p = 1)
+clf.fit(X, y)
+joblib.dump(clf, 'knn.pkl')
+
+
+#Decision Trees
+'''
+clf = tree.DecisionTreeClassifier()
+clf.fit(X, y)
+joblib.dump(clf, 'dts.pkl')
+'''
