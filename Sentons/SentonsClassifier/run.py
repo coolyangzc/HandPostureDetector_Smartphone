@@ -1,5 +1,5 @@
 import httplib
-from data_process import data_to_edge
+from data_format import data_to_edge
 from sklearn.externals import joblib
 
 clf = joblib.load('svm.pkl') 
@@ -13,8 +13,9 @@ while True:
     n, edge = data_to_edge(data)
     edges = []
     edges.append(edge)
-    print edges
-    print clf.predict(edges)
+    #print edges
+    result = clf.predict(edges)
+    print result
     
     httpClient.request('GET', '/send');
     response = httpClient.getresponse()
