@@ -1,7 +1,6 @@
 #include "Common.h"
 #include "SentonsViewer.h"
 
-
 #include <cstdio>
 #include <fstream>
 #include <iostream>
