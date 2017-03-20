@@ -14,11 +14,14 @@ namespace SentonsDemo
     {
         private SentonsReader reader;
         private TouchReader.TouchSet newestTouchset;
+        private HistoryValueContainer LR = new HistoryValueContainer(2000, 0.01);
+
         const int UP_MM = 116;
         const int UP_PIXEL = 100;
         const int DOWN_PIXEL = 740;
         const int LEFT_PIXEL = 620;
         const int RIGHT_PIXEL = 980;
+
         public Form1()
         {
             InitializeComponent();
@@ -40,6 +43,9 @@ namespace SentonsDemo
             Graphics g = e.Graphics;
             Pen pen = new Pen(Color.Black, 2);
             g.DrawRectangle(pen, LEFT_PIXEL, UP_PIXEL, RIGHT_PIXEL - LEFT_PIXEL, DOWN_PIXEL - UP_PIXEL);
+            Font font = new Font("Times New Roman", 20);
+            Brush blackBrush = new SolidBrush(Color.Black);
+            g.DrawString(Math.Round(LR.value, 2).ToString(), font, blackBrush, 100, 100);
             if (newestTouchset == null)
                 return;
             int x;
@@ -58,9 +64,10 @@ namespace SentonsDemo
             }
         }
 
-        public void update(TouchReader.TouchSet newestTouchset)
+        public void update(TouchReader.TouchSet newestTouchset, double result = 0)
         {
             this.newestTouchset = newestTouchset;
+            LR.update(result, DateTime.Now);
             this.Invalidate();
         }
 

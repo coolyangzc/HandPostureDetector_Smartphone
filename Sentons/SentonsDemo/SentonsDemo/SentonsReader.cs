@@ -12,7 +12,6 @@ namespace SentonsDemo
     public class SentonsReader
     {
         static TouchReader.Reader reader;
-        static StreamWriter writer;
         static HttpListener httpListener;
         static Form1 form;
         static TouchReader.TouchSet newestTouchset;
@@ -28,11 +27,6 @@ namespace SentonsDemo
             System.Console.Write(s + '\n');
         }
 
-        public void setWriter(StreamWriter swriter)
-        {
-            writer = swriter;
-        }
-
         public void startRead()
         {
             httpListener = new HttpListener();
@@ -45,8 +39,6 @@ namespace SentonsDemo
 
         public void finishRead()
         {
-            if (httpListener != null)
-                httpListener.Close();
             if (thread != null)
                 thread.Abort();
         }
@@ -78,8 +70,12 @@ namespace SentonsDemo
                 }
                 else
                 {
-                    string result = type;
-                    form.update(newestTouchset);
+                    double result = double.Parse(type);
+                    if (result == -1)
+                        result = 0;
+                    else if (result == 0)
+                        result = -1;
+                    form.update(newestTouchset, result);
                     using (StreamWriter writer = new StreamWriter(httpListenerContext.Response.OutputStream))
                     {
                         writer.Write("");
