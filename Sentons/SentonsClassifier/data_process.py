@@ -11,6 +11,7 @@ category[0] = ['V_L', 'V_L_F', 'V_L_A']
 category[1] = ['V_R', 'V_R_F', 'V_R_A']
 #category[2] = ['V_D', 'V_D_F', 'V_D_A']
 
+
 def process(fd, catg, outfd):
     lines = fd.readlines()    
     for line in lines[2:]:

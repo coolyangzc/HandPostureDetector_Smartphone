@@ -2,6 +2,7 @@ EDGE_MM = 116
 CONST = False
 PIXELS = 128
 
+
 def data_to_edge(data):
     n = int(data[0])
     edge = [0 for i in range(PIXELS) * 2]
