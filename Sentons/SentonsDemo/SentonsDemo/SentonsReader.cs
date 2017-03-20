@@ -15,6 +15,7 @@ namespace SentonsDemo
         static StreamWriter writer;
         static HttpListener httpListener;
         static Form1 form;
+        static TouchReader.TouchSet newestTouchset;
         Thread thread;
         public SentonsReader(Form1 _form)
         {
@@ -44,7 +45,10 @@ namespace SentonsDemo
 
         public void finishRead()
         {
-            thread.Abort();
+            if (httpListener != null)
+                httpListener.Close();
+            if (thread != null)
+                thread.Abort();
         }
 
         static void reading(Object stateInfo)
@@ -52,8 +56,9 @@ namespace SentonsDemo
             while(true)
             {
                 reader.Read();
-                string sendData = reader.LatestTouchSet.touchList.Count.ToString();
-                foreach (TouchReader.TouchReport touchReportEntry in reader.LatestTouchSet.touchList)
+                newestTouchset = reader.LatestTouchSet;
+                string sendData = newestTouchset.touchList.Count.ToString();
+                foreach (TouchReader.TouchReport touchReportEntry in newestTouchset.touchList)
                 {
                     sendData += (string.Format(" {0} {1} {2} {3} {4} {5}",
                                 touchReportEntry.BarID, touchReportEntry.TrackID, touchReportEntry.force_lvl,
@@ -74,13 +79,13 @@ namespace SentonsDemo
                 else
                 {
                     string result = type;
-                    Console.Out.WriteLine(result);
+                    form.update(newestTouchset);
                     using (StreamWriter writer = new StreamWriter(httpListenerContext.Response.OutputStream))
                     {
                         writer.Write("");
                     }
                 }
-                Thread.Sleep(9);
+                Thread.Sleep(10);
             }
         }
 
