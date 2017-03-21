@@ -14,7 +14,7 @@ namespace SentonsDemo
     {
         private SentonsReader reader;
         private TouchReader.TouchSet newestTouchset;
-        private HistoryValueContainer LR = new HistoryValueContainer(2000, 0.01);
+        private HistoryValueContainer LR = new HistoryValueContainer(1500, 0.01);
 
         const int UP_MM = 116;
         const int UP_PIXEL = 100;
@@ -45,7 +45,14 @@ namespace SentonsDemo
             g.DrawRectangle(pen, LEFT_PIXEL, UP_PIXEL, RIGHT_PIXEL - LEFT_PIXEL, DOWN_PIXEL - UP_PIXEL);
             Font font = new Font("Times New Roman", 20);
             Brush blackBrush = new SolidBrush(Color.Black);
-            g.DrawString(Math.Round(LR.value, 2).ToString(), font, blackBrush, 100, 100);
+            g.DrawString(Math.Round(LR.value, 2).ToString(), font, blackBrush, 100, 700);
+            if (LR.value < -0.5)
+                resultPic.Image = Image.FromFile("v_l.png");
+            else if (LR.value > 0.5)
+                resultPic.Image = Image.FromFile("v_r.png");
+            else
+                resultPic.Image = null;
+            
             if (newestTouchset == null)
                 return;
             int x;
