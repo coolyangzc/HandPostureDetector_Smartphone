@@ -39,6 +39,8 @@ namespace SentonsDemo
 
         public void finishRead()
         {
+            if (httpListener != null)
+                httpListener.Close();
             if (thread != null)
                 thread.Abort();
         }
@@ -75,7 +77,7 @@ namespace SentonsDemo
                         result = 0;
                     else if (result == 0)
                         result = -1;
-                    form.update(newestTouchset, result);
+                    form.Update(newestTouchset, result);
                     using (StreamWriter writer = new StreamWriter(httpListenerContext.Response.OutputStream))
                     {
                         writer.Write("");

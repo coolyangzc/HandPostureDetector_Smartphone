@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
+using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace SentonsDemo
@@ -15,6 +11,7 @@ namespace SentonsDemo
         private SentonsReader reader;
         private TouchReader.TouchSet newestTouchset;
         private HistoryValueContainer LR = new HistoryValueContainer(1500, 0.01);
+        private Thread classifierThread = new Thread(RunClassifier);
 
         const int UP_MM = 116;
         const int UP_PIXEL = 100;
@@ -31,6 +28,26 @@ namespace SentonsDemo
             reader = new SentonsReader(this);
             reader.connect();
             reader.startRead();
+            classifierThread.Start();
+        }
+
+        static void RunClassifier()
+        {
+            RunCmd("python run.py");
+        }
+
+        static string RunCmd(string command)
+        {
+            Process p = new Process();
+            p.StartInfo.FileName = "cmd.exe";         
+            p.StartInfo.Arguments = "/c " + command;
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.RedirectStandardInput = true;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.RedirectStandardError = true;  
+            p.StartInfo.CreateNoWindow = true;
+            p.Start();
+            return p.StandardOutput.ReadToEnd();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -71,10 +88,10 @@ namespace SentonsDemo
             }
         }
 
-        public void update(TouchReader.TouchSet newestTouchset, double result = 0)
+        public void Update(TouchReader.TouchSet newestTouchset, double result = 0)
         {
             this.newestTouchset = newestTouchset;
-            LR.update(result, DateTime.Now);
+            LR.Update(result, DateTime.Now);
             this.Invalidate();
         }
 
@@ -82,6 +99,7 @@ namespace SentonsDemo
         {
             reader.finishRead();
             reader.disconnect();
+            classifierThread.Abort();
         }
     }
 }

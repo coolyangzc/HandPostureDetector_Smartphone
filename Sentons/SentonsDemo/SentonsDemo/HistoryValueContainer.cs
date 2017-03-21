@@ -17,7 +17,7 @@ namespace SentonsDemo
             this.ms = ms;
             this.lowWeight = lowWeight;
         }
-        public void update(double newValue, DateTime time)
+        public void Update(double newValue, DateTime time)
         {
             values.Enqueue(newValue);
             timestamps.Enqueue(time);

@@ -2,7 +2,7 @@ import httplib
 from data_format import data_to_edge
 from sklearn.externals import joblib
 
-clf = joblib.load('knn.pkl')
+clf = joblib.load('dts.pkl')
 
 while True:
     httpClient = httplib.HTTPConnection('127.0.0.1', 8000, timeout=10)
