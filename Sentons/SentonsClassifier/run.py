@@ -4,6 +4,8 @@ from sklearn.externals import joblib
 
 clf = joblib.load('dts.pkl')
 
+print 'model loaded successfully'
+
 while True:
     httpClient = httplib.HTTPConnection('127.0.0.1', 8000, timeout=10)
     httpClient.request('GET', '/t')
@@ -16,7 +18,7 @@ while True:
     else:
         edges = [edge]
         result = clf.predict(edges)[0]
-    print result
+    #print result
     
     httpClient.request('GET', '/' + str(result));
     response = httpClient.getresponse()

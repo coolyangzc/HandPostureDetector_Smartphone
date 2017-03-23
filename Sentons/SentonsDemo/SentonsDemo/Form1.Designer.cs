@@ -36,7 +36,7 @@
             // resultPic
             // 
             this.resultPic.Image = ((System.Drawing.Image)(resources.GetObject("resultPic.Image")));
-            this.resultPic.Location = new System.Drawing.Point(64, 64);
+            this.resultPic.Location = new System.Drawing.Point(64, 100);
             this.resultPic.Name = "resultPic";
             this.resultPic.Size = new System.Drawing.Size(256, 180);
             this.resultPic.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -47,7 +47,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1582, 853);
+            this.ClientSize = new System.Drawing.Size(882, 853);
             this.Controls.Add(this.resultPic);
             this.Name = "Form1";
             this.Text = "Hand Posture Demo";

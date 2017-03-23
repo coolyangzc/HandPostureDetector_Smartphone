@@ -16,8 +16,8 @@ namespace SentonsDemo
         const int UP_MM = 116;
         const int UP_PIXEL = 100;
         const int DOWN_PIXEL = 740;
-        const int LEFT_PIXEL = 620;
-        const int RIGHT_PIXEL = 980;
+        const int LEFT_PIXEL = 400;
+        const int RIGHT_PIXEL = 760;
 
         public Form1()
         {
