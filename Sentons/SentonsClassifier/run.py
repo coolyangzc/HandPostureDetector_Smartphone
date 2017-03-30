@@ -19,6 +19,6 @@ while True:
         edges = [edge]
         result = clf.predict(edges)[0]
     #print result
-    
+
     httpClient.request('GET', '/' + str(result));
     response = httpClient.getresponse()
