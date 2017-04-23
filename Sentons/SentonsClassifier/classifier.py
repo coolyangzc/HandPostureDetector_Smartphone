@@ -40,10 +40,12 @@ kf = KFold(n_splits = 5, shuffle = True)
 kf.get_n_splits(X)
 error = []
 for k, (train_index, test_index) in enumerate(kf.split(X, y)):
+    print('\n' + str(k))
     X_train, X_test = X[train_index], X[test_index]
     y_train, y_test = y[train_index], y[test_index]
-    clf = neighbors.KNeighborsClassifier(100, 'distance', 'auto', p = 1)
+    clf = tree.DecisionTreeClassifier()
     clf.fit(X_train, y_train)
+    print('clf.fit(X_train, y_train) finish')
     answer_train = clf.predict(X_train)      
     print('training accuracy: '+ str(np.mean(answer_train == y_train)))
     answer_test = clf.predict(X_test)
