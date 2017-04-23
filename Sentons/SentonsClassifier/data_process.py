@@ -11,11 +11,15 @@ category[0] = ['V_L', 'V_L_F', 'V_L_A']
 category[1] = ['V_R', 'V_R_F', 'V_R_A']
 #category[2] = ['V_D', 'V_D_F', 'V_D_A']
 
+duplicate_removal = True
 
 def process(fd, catg, outfd):
-    lines = fd.readlines()    
+    lines = fd.readlines()
+    last_data = []
     for line in lines[2:]:
         data = line[:-1].split(' ')[2:]
+        if duplicate_removal and cmp(data, last_data) == 0:
+            continue
         n, edge = data_to_edge(data)
         if n <= 0:
             continue
@@ -25,8 +29,9 @@ def process(fd, catg, outfd):
             else:
                 outfd.write(str(round(edge[i], 2)) + ' ')
         outfd.write(str(catg) + '\n')
+        last_data = data
 
-output_filename = '..\Sentons_Data\data.txt'
+output_filename = '..\Sentons_Data\data_unique.txt'
 outfd = open(output_filename, 'w')
 outfd.write(str(PIXELS) + '\n') 
 for parent, dirnames, filenames in os.walk(dir):

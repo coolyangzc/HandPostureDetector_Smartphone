@@ -52,8 +52,9 @@ namespace SentonsDemo
                 reader.Read();
                 newestTouchset = reader.LatestTouchSet;
                 string sendData = newestTouchset.touchList.Count.ToString();
-                foreach (TouchReader.TouchReport touchReportEntry in newestTouchset.touchList)
+                for (int i = 0; i < newestTouchset.touchList.Count; i++)
                 {
+                    TouchReader.TouchReport touchReportEntry = newestTouchset.touchList[i];
                     sendData += (string.Format(" {0} {1} {2} {3} {4} {5}",
                                 touchReportEntry.BarID, touchReportEntry.TrackID, touchReportEntry.force_lvl,
                                 processSignedDiv16(touchReportEntry.pos0),

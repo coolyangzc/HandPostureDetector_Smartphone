@@ -10,7 +10,7 @@ from sklearn.model_selection import KFold
 print 'File reading...'
 sys.stdout.flush()
 
-filename = '..\Sentons_Data\data.txt'
+filename = '..\Sentons_Data\data_unique.txt'
 fd = file(filename)
 pixels = int(fd.readline()[:-1])
 
@@ -35,14 +35,14 @@ y = np.array(y)
 print 'Start training on ' + str(len(X)) + ' data'
 sys.stdout.flush()
 
-'''
+
 kf = KFold(n_splits = 5, shuffle = True)
 kf.get_n_splits(X)
 error = []
 for k, (train_index, test_index) in enumerate(kf.split(X, y)):
     X_train, X_test = X[train_index], X[test_index]
     y_train, y_test = y[train_index], y[test_index]
-    clf = tree.DecisionTreeClassifier()
+    clf = neighbors.KNeighborsClassifier(100, 'distance', 'auto', p = 1)
     clf.fit(X_train, y_train)
     answer_train = clf.predict(X_train)      
     print('training accuracy: '+ str(np.mean(answer_train == y_train)))
@@ -53,7 +53,7 @@ for k, (train_index, test_index) in enumerate(kf.split(X, y)):
 # Averaging
 print "===========Final Result==========="
 print "Final accuracy: " + str(np.mean(error))
-'''
+
 
 #Support Vector Machine
 '''
@@ -63,11 +63,11 @@ joblib.dump(clf, 'svm.pkl')
 '''
 
 #K Nearest Neighbors
-
+'''
 clf = neighbors.KNeighborsClassifier(100, 'distance', 'auto', p = 1)
 clf.fit(X, y)
 joblib.dump(clf, 'knn.pkl')
-
+'''
 
 #Decision Trees
 '''

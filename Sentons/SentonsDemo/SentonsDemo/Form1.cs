@@ -73,8 +73,9 @@ namespace SentonsDemo
             if (newestTouchset == null)
                 return;
             int x;
-            foreach (TouchReader.TouchReport entry in newestTouchset.touchList)
+            for (int i = 0; i < newestTouchset.touchList.Count; i++)
             {
+                TouchReader.TouchReport entry = newestTouchset.touchList[i];
                 if (entry.BarID == 0)
                     x = RIGHT_PIXEL;
                 else
