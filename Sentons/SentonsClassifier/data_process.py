@@ -1,4 +1,3 @@
-import os
 import os.path
 
 from data_format import PIXELS
@@ -31,7 +30,7 @@ def process(fd, catg, outfd):
         outfd.write(str(catg) + '\n')
         last_data = data
 
-output_filename = '..\Sentons_Data\data_unique.txt'
+output_filename = '..\Sentons_Result\data_unique.txt'
 outfd = open(output_filename, 'w')
 outfd.write(str(PIXELS) + '\n') 
 for parent, dirnames, filenames in os.walk(dir):

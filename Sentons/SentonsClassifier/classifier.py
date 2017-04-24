@@ -10,7 +10,7 @@ from sklearn.model_selection import KFold
 print 'File reading...'
 sys.stdout.flush()
 
-filename = '..\Sentons_Data\data_unique.txt'
+filename = '..\Sentons_Result\data_unique.txt'
 fd = file(filename)
 pixels = int(fd.readline()[:-1])
 
