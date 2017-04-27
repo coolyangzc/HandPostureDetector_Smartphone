@@ -36,18 +36,24 @@ def analyse(fd, catg, outfd, mission, username):
         outfd.write(username + ',' + mission + ',')
         sum_area = area[0] + area[1]
         if sum_area == 0:
-            outfd.write('0,0,0,0,')
+            for i in range(9):
+                outfd.write('0,')
         else:
             outfd.write(str(sum_area) + ',' +
+                        str(count[1]) + ',' + str(count[0]) + ',' + str(count[1])+'-'+str(count[0]) + ',' +
                         str(count[0] / float(count[0] + count[1])) + ',' +
                         str(forces[0] / float(forces[0] + forces[1])) + ',' +
+                        str(area[1]) + ',' + str(area[0]) + ',' +
                         str(area[0] / sum_area) + ',')
-        outfd.write(str(catg) + '\n')
+        outfd.write('L\n' if catg == 0 else 'R\n')
         last_data = data
 
 output_filename = '..\Sentons_Result\data_analyse.txt'
 outfd = open(output_filename, 'w')
-outfd.write('User,Mission,TotalArea*Force,RightPortion(Count),RightPortion(Force),RightPortion(Area*Force),Category(L0/R1)\n')
+outfd.write('User,Mission,Total(Area*Force),')
+outfd.write('L(Count),R(Count),L-R(Count),RightPortion(Count),')
+outfd.write('RightPortion(Force),')
+outfd.write('L(Area*Force),R(Area*Force),RightPortion(Area*Force),Category(L/R)\n')
 for parent, dirnames, filenames in os.walk(dir):
     for filename in filenames:
         fd = file(os.path.join(parent, filename))
