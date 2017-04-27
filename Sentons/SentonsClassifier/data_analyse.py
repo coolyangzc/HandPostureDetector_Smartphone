@@ -1,9 +1,10 @@
 import os.path
 
-from data_format import PIXELS
-from data_format import data_to_edge
-
 dir = "..\Sentons_Data"
+
+
+#bar: L = 1, R = 0
+#pos: Up = 116, Down = 0
 
 category = [[] for i in range(2)]
 category[0] = ['V_L', 'V_L_F', 'V_L_A']
@@ -22,6 +23,7 @@ def analyse(fd, catg, outfd, mission, username):
         area = [0, 0]
         forces = [0, 0]
         count = [0, 0]
+        gravity = [0, 0]
         n = int(data[0])
         p = 1
         for touch in range(n):
@@ -32,28 +34,34 @@ def analyse(fd, catg, outfd, mission, username):
             count[bar] += 1
             forces[bar] += force
             area[bar] += force * (pos1 - pos0)
+            gravity[bar] += force * (pos1 - pos0) * (pos0 + pos1) / 2
             p += 6
+        for bar in range(2):
+            if area[bar] != 0:
+                gravity[bar] /= area[bar]
         outfd.write(username + ',' + mission + ',')
         sum_area = area[0] + area[1]
         if sum_area == 0:
-            for i in range(9):
+            for i in range(12):
                 outfd.write('0,')
         else:
             outfd.write(str(sum_area) + ',' +
-                        str(count[1]) + ',' + str(count[0]) + ',' + str(count[1])+'-'+str(count[0]) + ',' +
+                        str(count[1]) + ',' + str(count[0]) + ',' + str(count[1])+'_'+str(count[0]) + ',' +
                         str(count[0] / float(count[0] + count[1])) + ',' +
                         str(forces[0] / float(forces[0] + forces[1])) + ',' +
-                        str(area[1]) + ',' + str(area[0]) + ',' +
-                        str(area[0] / sum_area) + ',')
+                        str(area[1]) + ',' + str(area[0]) + ',' + str(area[0] / sum_area) + ',' +
+                        str(gravity[1]) + ',' + str(gravity[0]) + ',' + str(gravity[1] - gravity[0]) + ',')
         outfd.write('L\n' if catg == 0 else 'R\n')
         last_data = data
 
 output_filename = '..\Sentons_Result\data_analyse.txt'
 outfd = open(output_filename, 'w')
 outfd.write('User,Mission,Total(Area*Force),')
-outfd.write('L(Count),R(Count),L-R(Count),RightPortion(Count),')
+outfd.write('L(Count),R(Count),L_R(Count),RightPortion(Count),')
 outfd.write('RightPortion(Force),')
-outfd.write('L(Area*Force),R(Area*Force),RightPortion(Area*Force),Category(L/R)\n')
+outfd.write('L(Area*Force),R(Area*Force),RightPortion(Area*Force),')
+outfd.write('L(Gravity),R(Gravity),L-R(Gravity),')
+outfd.write('Category(L/R)\n')
 for parent, dirnames, filenames in os.walk(dir):
     for filename in filenames:
         fd = file(os.path.join(parent, filename))
