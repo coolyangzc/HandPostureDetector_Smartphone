@@ -10,8 +10,10 @@ category = [[] for i in range(2)]
 category[0] = ['V_L', 'V_L_F', 'V_L_A']
 category[1] = ['V_R', 'V_R_F', 'V_R_A']
 #category[2] = ['V_D', 'V_D_F', 'V_D_A']
+bar_catg = ['R', 'L']
 
 duplicate_removal = False
+zero_removal = True
 
 def analyse(fd, catg, outfd, mission, username):
     lines = fd.readlines()
@@ -20,11 +22,13 @@ def analyse(fd, catg, outfd, mission, username):
         data = line[:-1].split(' ')[2:]
         if duplicate_removal and cmp(data, last_data) == 0:
             continue
+        n = int(data[0])
         area = [0, 0]
         forces = [0, 0]
         count = [0, 0]
         gravity = [0, 0]
-        n = int(data[0])
+        highest = [0, 0]
+
         p = 1
         for touch in range(n):
             bar = int(data[p])
@@ -35,32 +39,52 @@ def analyse(fd, catg, outfd, mission, username):
             forces[bar] += force
             area[bar] += force * (pos1 - pos0)
             gravity[bar] += force * (pos1 - pos0) * (pos0 + pos1) / 2
+            highest[bar] = max(highest[bar], pos1)
             p += 6
+        sum_area = area[0] + area[1]
+        if zero_removal and sum_area == 0:
+            continue
         for bar in range(2):
             if area[bar] != 0:
                 gravity[bar] /= area[bar]
         outfd.write(username + ',' + mission + ',')
-        sum_area = area[0] + area[1]
+
         if sum_area == 0:
-            for i in range(12):
+            if zero_removal:
+                continue
+            for i in range(18):
                 outfd.write('0,')
         else:
-            outfd.write(str(sum_area) + ',' +
-                        str(count[1]) + ',' + str(count[0]) + ',' + str(count[1])+'_'+str(count[0]) + ',' +
+            outfd.write(str(sum_area) + ',')
+            for i in range(2):
+                outfd.write(str(highest[i]) + ',' +
+                            str(count[i]) + ',' +
+                            str(forces[i]) + ',' +
+                            str(area[i]) + ',' +
+                            str(gravity[i]) + ',')
+            outfd.write(str(highest[1] - highest[0]) + ',' +
+                        str(count[1] - count[0]) + ',' + str(count[1])+'_'+str(count[0]) + ',' +
                         str(count[0] / float(count[0] + count[1])) + ',' +
                         str(forces[0] / float(forces[0] + forces[1])) + ',' +
-                        str(area[1]) + ',' + str(area[0]) + ',' + str(area[0] / sum_area) + ',' +
-                        str(gravity[1]) + ',' + str(gravity[0]) + ',' + str(gravity[1] - gravity[0]) + ',')
+                        str(area[0] / sum_area) + ',' +
+                        str(gravity[1] - gravity[0]) + ',')
         outfd.write('L\n' if catg == 0 else 'R\n')
         last_data = data
 
 output_filename = '..\Sentons_Result\data_analyse.txt'
 outfd = open(output_filename, 'w')
 outfd.write('User,Mission,Total(Area*Force),')
-outfd.write('L(Count),R(Count),L_R(Count),RightPortion(Count),')
+for i in range(2):
+    outfd.write(bar_catg[i] + '(Highest),' +
+                bar_catg[i] + '(Count),' +
+                bar_catg[i] + '(Force),' +
+                bar_catg[i] + '(Area*Force),' +
+                bar_catg[i] + '(Gravity),')
+outfd.write('L-R(Highest),')
+outfd.write('L-R(Count),L_R(Count),RightPortion(Count),')
 outfd.write('RightPortion(Force),')
-outfd.write('L(Area*Force),R(Area*Force),RightPortion(Area*Force),')
-outfd.write('L(Gravity),R(Gravity),L-R(Gravity),')
+outfd.write('RightPortion(Area*Force),')
+outfd.write('L-R(Gravity),')
 outfd.write('Category(L/R)\n')
 for parent, dirnames, filenames in os.walk(dir):
     for filename in filenames:
