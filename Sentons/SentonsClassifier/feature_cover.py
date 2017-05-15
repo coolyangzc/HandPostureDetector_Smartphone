@@ -13,7 +13,7 @@ category[1] = ['V_R', 'V_R_F', 'V_R_A']
 
 hand_name = ['L', 'R', 'Sum']
 feature_name = ['TOTAL', 'ONE_SIDE', 'Count >= 3', 'Highest >= 95', 'Lowest_Long',
-                'Integration(>)', 'Integration(>1)']
+                'Integration(>)', 'Integration(>1)', 'Integration(empty, >)']
 TOTAL = 0
 category_name = ['Normal', 'Force', 'Dynamic', 'Sum']
 
@@ -39,7 +39,7 @@ def analyse(fd, hand, mission, username):
                     return i ^ 1
         if feature == 'Count >= 3':
             for i in range(2):
-                if count[i] >= 3 and count[i] > count[i^1]:
+                if count[i] >= 3 > count[i^1]:
                     return i ^ 1
         if feature == 'Highest >= 95':
             for i in range(2):
@@ -66,7 +66,8 @@ def analyse(fd, hand, mission, username):
             break
     lines = fd.readlines()
     last_data = []
-    last_time = time = -1
+    time = -1
+    predict = [0, 0]
     for line in lines[2 + FRAME_SKIP_L: -FRAME_SKIP_R]:
         last_time = time
         time = float(line[:-1].split(' ')[1])
@@ -98,19 +99,22 @@ def analyse(fd, hand, mission, username):
             highest[bar] = max(highest[bar], pos1)
             longest[bar] = max(longest[bar], pos1 - pos0)
             p += 6
+        if last_time == -1:
+            continue
+        frame_time = time - last_time
         sum_area = area[0] + area[1]
         if zero_removal and sum_area == 0:
+            for i in range(2):
+                if predict[i] > predict[i^1]:
+                    cover_time[-1][hand][task] += frame_time
+                    if hand == i:
+                        acc_time[-1][hand][task] += frame_time
             continue
         for bar in range(2):
             if area[bar] != 0:
                 gravity[bar] /= area[bar]
-        if sum_area == 0:
-            if zero_removal:
-                continue
-        if last_time == -1:
-            continue
-        frame_time = time - last_time
-        predict = [0, 0]
+
+        predict[0] = predict[1] = 0
         for feature in range(len(feature_name)):
             res = calc_feature(feature)
             if res == -1:

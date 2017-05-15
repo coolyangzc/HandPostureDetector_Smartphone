@@ -59,8 +59,6 @@ def analyse(fd, catg, outfd, mission, username):
         outfd.write(username + ',' + mission + ',')
 
         if sum_area == 0:
-            if zero_removal:
-                continue
             for i in range(18):
                 outfd.write('0,')
         else:
