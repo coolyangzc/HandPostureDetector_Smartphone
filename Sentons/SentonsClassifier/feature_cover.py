@@ -12,7 +12,7 @@ category[1] = ['V_R', 'V_R_F', 'V_R_A']
 #category[2] = ['V_D', 'V_D_F', 'V_D_A']
 
 hand_name = ['L', 'R', 'Sum']
-feature_name = ['TOTAL', 'ONE_SIDE']
+feature_name = ['TOTAL', 'ONE_SIDE', 'Count >= 3', 'Highest >= 95']
 TOTAL = 0
 category_name = ['Normal', 'Force', 'Dynamic', 'Sum']
 
@@ -24,6 +24,7 @@ tot_time = 0
 cover_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name))]
 acc_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name))]
 
+FRAME_SKIP_L, FRAME_SKIP_R = 20, 20
 duplicate_removal = False
 zero_removal = True
 
@@ -38,6 +39,14 @@ def analyse(fd, hand, mission, username):
             for i in range(2):
                 if count[i] == 0:
                     return i ^ 1
+        if feature == 'Count >= 3':
+            for i in range(2):
+                if count[i] >= 3 and count[i] > count[i^1]:
+                    return i ^ 1
+        if feature == 'Highest >= 95':
+            for i in range(2):
+                if highest[i] >= 95 and highest[i^1] < 95:
+                    return i
         return -1
 
     for i in range(3):
@@ -47,8 +56,8 @@ def analyse(fd, hand, mission, username):
     global tot_time
     lines = fd.readlines()
     last_data = []
-    last_time = time = 0
-    for line in lines[2:]:
+    last_time = time = -1
+    for line in lines[2 + FRAME_SKIP_L: -FRAME_SKIP_R]:
         last_time = time
         time = float(line[:-1].split(' ')[1])
         data = line[:-1].split(' ')[2:]
@@ -83,7 +92,8 @@ def analyse(fd, hand, mission, username):
         if sum_area == 0:
             if zero_removal:
                 continue
-
+        if last_time == -1:
+            continue
         frame_time = time - last_time
         tot_time += frame_time
         for feature in range(len(feature_name)):
@@ -131,9 +141,12 @@ for feature in range(len(feature_name)):
                      cover_time[feature][hand][task] / cover_time[TOTAL][hand][task] * 100),
         print >> outfd, '\n%12s' % '',
         for hand in range(len(hand_name)):
-            print >> outfd, '%8.2fs, %5.1f%%' % \
-                            (acc_time[feature][hand][task] / 1000,
-                             acc_time[feature][hand][task] / cover_time[feature][hand][task] * 100),
+            print >> outfd, '%8.2fs,' % (acc_time[feature][hand][task] / 1000),
+            if cover_time[feature][hand][task] > 0:
+                print >> outfd, '%5.1f%%' % \
+                                (acc_time[feature][hand][task] / cover_time[feature][hand][task] * 100),
+            else:
+                print >> outfd, '%5.1f%%' % 0,
         print >> outfd, '\n'
     print >> outfd
 outfd.close()
