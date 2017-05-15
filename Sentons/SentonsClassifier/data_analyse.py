@@ -30,6 +30,8 @@ def analyse(fd, catg, outfd, mission, username):
         forces = [0, 0]
         count = [0, 0]
         gravity = [0, 0]
+        lowest = [116, 116]
+        lowest_long = [0, 0]
         highest = [0, 0]
         longest = [0, 0]
         p = 1
@@ -42,6 +44,9 @@ def analyse(fd, catg, outfd, mission, username):
             forces[bar] += force
             area[bar] += force * (pos1 - pos0)
             gravity[bar] += force * (pos1 - pos0) * (pos0 + pos1) / 2
+            if pos0 < lowest[bar]:
+                lowest[bar] = pos0
+                lowest_long[bar] = pos1 - pos0
             highest[bar] = max(highest[bar], pos1)
             longest[bar] = max(longest[bar], pos1 - pos0)
             p += 6
@@ -61,7 +66,9 @@ def analyse(fd, catg, outfd, mission, username):
         else:
             outfd.write(str(sum_area) + ',')
             for i in range(2):
-                outfd.write(str(highest[i]) + ',' +
+                outfd.write(str(lowest[i]) + ',' +
+                            str(highest[i]) + ',' +
+                            str(lowest_long[i]) + ',' +
                             str(longest[i]) + ',' +
                             str(count[i]) + ',' +
                             str(forces[i]) + ',' +
@@ -81,7 +88,9 @@ output_filename = '..\Sentons_Result\data_analyse.txt'
 outfd = open(output_filename, 'w')
 outfd.write('User,Mission,Total(Area*Force),')
 for i in range(2):
-    outfd.write(bar_catg[i] + '(Highest),' +
+    outfd.write(bar_catg[i] + '(Lowest),' +
+                bar_catg[i] + '(Highest),' +
+                bar_catg[i] + '(Lowest_Long),' +
                 bar_catg[i] + '(Longest),' +
                 bar_catg[i] + '(Count),' +
                 bar_catg[i] + '(Force),' +

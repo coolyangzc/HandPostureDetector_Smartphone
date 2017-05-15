@@ -12,7 +12,8 @@ category[1] = ['V_R', 'V_R_F', 'V_R_A']
 #category[2] = ['V_D', 'V_D_F', 'V_D_A']
 
 hand_name = ['L', 'R', 'Sum']
-feature_name = ['TOTAL', 'ONE_SIDE', 'Count >= 3', 'Highest >= 95', 'Integration(>)', 'Integration(>1)']
+feature_name = ['TOTAL', 'ONE_SIDE', 'Count >= 3', 'Highest >= 95', 'Lowest_Long',
+                'Integration(>)', 'Integration(>1)']
 TOTAL = 0
 category_name = ['Normal', 'Force', 'Dynamic', 'Sum']
 
@@ -42,8 +43,13 @@ def analyse(fd, hand, mission, username):
                     return i ^ 1
         if feature == 'Highest >= 95':
             for i in range(2):
-                if highest[i] >= 95 and highest[i^1] < 95:
+                if highest[i] >= 95 > highest[i^1]:
                     return i
+        if feature == 'Lowest_Long':
+            for i in range(2):
+                if lowest[i] <= 15 and lowest[i^1] <= 15:
+                    if lowest_long[i] >= 24 and 0 < lowest_long[i^1] <= 18:
+                        return i
         if feature == 'Integration(>)':
             for i in range(2):
                 if predict[i] > predict[i^1]:
@@ -72,9 +78,10 @@ def analyse(fd, hand, mission, username):
         forces = [0, 0]
         count = [0, 0]
         gravity = [0, 0]
+        lowest = [116, 116]
+        lowest_long = [0, 0]
         highest = [0, 0]
         longest = [0, 0]
-        predict = [0, 0]
         p = 1
         for touch in range(n):
             bar = int(data[p]) ^ 1
@@ -85,6 +92,9 @@ def analyse(fd, hand, mission, username):
             forces[bar] += force
             area[bar] += force * (pos1 - pos0)
             gravity[bar] += force * (pos1 - pos0) * (pos0 + pos1) / 2
+            if pos0 < lowest[bar]:
+                lowest[bar] = pos0
+                lowest_long[bar] = pos1 - pos0
             highest[bar] = max(highest[bar], pos1)
             longest[bar] = max(longest[bar], pos1 - pos0)
             p += 6
@@ -100,6 +110,7 @@ def analyse(fd, hand, mission, username):
         if last_time == -1:
             continue
         frame_time = time - last_time
+        predict = [0, 0]
         for feature in range(len(feature_name)):
             res = calc_feature(feature)
             if res == -1:
@@ -136,7 +147,7 @@ for feature in range(len(feature_name)):
             acc_time[feature][2][3] += acc_time[feature][hand][task]
 
 for feature in range(len(feature_name)):
-    print >> outfd, '%-12s%12s%18s%18s' % (feature_name[feature], 'L', 'R', 'Sum')
+    print >> outfd, '%-23s%s%18s%18s' % (feature_name[feature], 'L', 'R', 'Sum')
     for task in range(len(category_name)):
         print >> outfd, '%4s%-8s' % ('',category_name[task]),
         for hand in range(len(hand_name)):
