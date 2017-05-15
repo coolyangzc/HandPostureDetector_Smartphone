@@ -6,27 +6,44 @@ dir = "..\Sentons_Data"
 #bar: L = 1, R = 0
 #pos: Up = 116, Down = 0
 
-L = 1
-R = 0
 category = [[] for i in range(2)]
-category[0] = ['V_R', 'V_R_F', 'V_R_A']
-category[1] = ['V_L', 'V_L_F', 'V_L_A']
-
+category[0] = ['V_L', 'V_L_F', 'V_L_A']
+category[1] = ['V_R', 'V_R_F', 'V_R_A']
 #category[2] = ['V_D', 'V_D_F', 'V_D_A']
-bar_catg = ['R', 'L']
+
+hand_name = ['L', 'R', 'Sum']
+feature_name = ['TOTAL', 'ONE_SIDE']
+TOTAL = 0
+category_name = ['Normal', 'Force', 'Dynamic', 'Sum']
+
+bar_catg = ['L', 'R']
 
 global tot_time
 tot_time = 0
 
-ONE_SIDE = 0
-cover_time = [0]
-accurate_time = [0]
+cover_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name))]
+acc_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name))]
 
 duplicate_removal = False
 zero_removal = True
 
 
-def analyse(fd, catg, mission, username):
+def analyse(fd, hand, mission, username):
+
+    def calc_feature(used_feature):
+        feature = feature_name[used_feature]
+        if feature == 'TOTAL':
+            return hand
+        if feature == 'ONE_SIDE':
+            for i in range(2):
+                if count[i] == 0:
+                    return i ^ 1
+        return -1
+
+    for i in range(3):
+        if mission == category[hand][i]:
+            task = i
+            break
     global tot_time
     lines = fd.readlines()
     last_data = []
@@ -46,7 +63,7 @@ def analyse(fd, catg, mission, username):
         longest = [0, 0]
         p = 1
         for touch in range(n):
-            bar = int(data[p])
+            bar = int(data[p]) ^ 1
             force = int(data[p + 2])
             pos0 = float(data[p + 4])
             pos1 = float(data[p + 5])
@@ -69,14 +86,13 @@ def analyse(fd, catg, mission, username):
 
         frame_time = time - last_time
         tot_time += frame_time
-
-        for i in range(2):
-            if count[i] == 0:
-                cover_time[ONE_SIDE] += frame_time
-                if i == catg ^ 1:
-                    accurate_time[ONE_SIDE] += frame_time
-
-
+        for feature in range(len(feature_name)):
+            res = calc_feature(feature)
+            if res == -1:
+                continue
+            cover_time[feature][hand][task] += frame_time
+            if hand == res:
+                acc_time[feature][hand][task] += frame_time
         last_data = data
 
 
@@ -95,9 +111,29 @@ for parent, dirnames, filenames in os.walk(dir):
 output_filename = '..\Sentons_Result\\feature_cover.txt'
 outfd = open(output_filename, 'w')
 
-outfd.write('Total Valid Time: ' + str(tot_time) + '\n')
-outfd.write('ONE_SIDE:\n')
-outfd.write('\tCover: ' + str(cover_time[ONE_SIDE]) + ' ' + str(cover_time[ONE_SIDE] / tot_time) + '\n')
-outfd.write('\tAccuracy: ' + str(accurate_time[ONE_SIDE]) + ' ' +
-            str(accurate_time[ONE_SIDE] / cover_time[ONE_SIDE]) + '\n')
+for feature in range(len(feature_name)):
+    for hand in range(2):
+        for task in range(3):
+            cover_time[feature][hand][3] += cover_time[feature][hand][task]
+            cover_time[feature][2][task] += cover_time[feature][hand][task]
+            cover_time[feature][2][3] += cover_time[feature][hand][task]
+            acc_time[feature][hand][3] += acc_time[feature][hand][task]
+            acc_time[feature][2][task] += acc_time[feature][hand][task]
+            acc_time[feature][2][3] += acc_time[feature][hand][task]
+
+for feature in range(len(feature_name)):
+    print >> outfd, '%-12s%12s%18s%18s' % (feature_name[feature], 'L', 'R', 'Sum')
+    for task in range(len(category_name)):
+        print >> outfd, '%4s%-8s' % ('',category_name[task]),
+        for hand in range(len(hand_name)):
+            print >> outfd, '%8.2fs, %5.1f%%' % \
+                    (cover_time[feature][hand][task] / 1000,
+                     cover_time[feature][hand][task] / cover_time[TOTAL][hand][task] * 100),
+        print >> outfd, '\n%12s' % '',
+        for hand in range(len(hand_name)):
+            print >> outfd, '%8.2fs, %5.1f%%' % \
+                            (acc_time[feature][hand][task] / 1000,
+                             acc_time[feature][hand][task] / cover_time[feature][hand][task] * 100),
+        print >> outfd, '\n'
+    print >> outfd
 outfd.close()

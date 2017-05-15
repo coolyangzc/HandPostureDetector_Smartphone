@@ -10,7 +10,9 @@ category = [[] for i in range(2)]
 category[0] = ['V_L', 'V_L_F', 'V_L_A']
 category[1] = ['V_R', 'V_R_F', 'V_R_A']
 # category[2] = ['V_D', 'V_D_F', 'V_D_A']
-bar_catg = ['R', 'L']
+bar_catg = ['L', 'R']
+L = 0
+R = 1
 
 duplicate_removal = False
 zero_removal = True
@@ -32,7 +34,7 @@ def analyse(fd, catg, outfd, mission, username):
         longest = [0, 0]
         p = 1
         for touch in range(n):
-            bar = int(data[p])
+            bar = int(data[p]) ^ 1
             force = int(data[p + 2])
             pos0 = float(data[p + 4])
             pos1 = float(data[p + 5])
@@ -65,14 +67,14 @@ def analyse(fd, catg, outfd, mission, username):
                             str(forces[i]) + ',' +
                             str(area[i]) + ',' +
                             str(gravity[i]) + ',')
-            outfd.write(str(highest[0] - highest[1]) + ',' +
-                        str(longest[0] - longest[1]) + ',' +
-                        str(count[0] - count[1]) + ',' + str(count[1])+'_'+str(count[0]) + ',' +
-                        str(count[0] / float(count[0] + count[1])) + ',' +
-                        str(forces[0] / float(forces[0] + forces[1])) + ',' +
-                        str(area[0] / sum_area) + ',' +
-                        str(gravity[0] - gravity[1]) + ',')
-        outfd.write('L\n' if catg == 0 else 'R\n')
+            outfd.write(str(highest[R] - highest[L]) + ',' +
+                        str(longest[R] - longest[L]) + ',' +
+                        str(count[R] - count[L]) + ',' + str(count[L])+'_'+str(count[R]) + ',' +
+                        str(count[R] / float(count[R] + count[L])) + ',' +
+                        str(forces[R] / float(forces[R] + forces[L])) + ',' +
+                        str(area[R] / sum_area) + ',' +
+                        str(gravity[R] - gravity[L]) + ',')
+        outfd.write('L\n' if catg == L else 'R\n')
         last_data = data
 
 output_filename = '..\Sentons_Result\data_analyse.txt'
