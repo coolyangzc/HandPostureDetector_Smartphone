@@ -12,14 +12,11 @@ category[1] = ['V_R', 'V_R_F', 'V_R_A']
 #category[2] = ['V_D', 'V_D_F', 'V_D_A']
 
 hand_name = ['L', 'R', 'Sum']
-feature_name = ['TOTAL', 'ONE_SIDE', 'Count >= 3', 'Highest >= 95']
+feature_name = ['TOTAL', 'ONE_SIDE', 'Count >= 3', 'Highest >= 95', 'Integration(>)', 'Integration(>1)']
 TOTAL = 0
 category_name = ['Normal', 'Force', 'Dynamic', 'Sum']
 
 bar_catg = ['L', 'R']
-
-global tot_time
-tot_time = 0
 
 cover_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name))]
 acc_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name))]
@@ -47,13 +44,20 @@ def analyse(fd, hand, mission, username):
             for i in range(2):
                 if highest[i] >= 95 and highest[i^1] < 95:
                     return i
+        if feature == 'Integration(>)':
+            for i in range(2):
+                if predict[i] > predict[i^1]:
+                    return i
+        if feature == 'Integration(>1)':
+            for i in range(2):
+                if predict[i] > predict[i^1] + 1:
+                    return i
         return -1
 
     for i in range(3):
         if mission == category[hand][i]:
             task = i
             break
-    global tot_time
     lines = fd.readlines()
     last_data = []
     last_time = time = -1
@@ -70,6 +74,7 @@ def analyse(fd, hand, mission, username):
         gravity = [0, 0]
         highest = [0, 0]
         longest = [0, 0]
+        predict = [0, 0]
         p = 1
         for touch in range(n):
             bar = int(data[p]) ^ 1
@@ -95,17 +100,16 @@ def analyse(fd, hand, mission, username):
         if last_time == -1:
             continue
         frame_time = time - last_time
-        tot_time += frame_time
         for feature in range(len(feature_name)):
             res = calc_feature(feature)
             if res == -1:
                 continue
+            if feature != 0 and not feature_name[feature].startswith('Integration'):
+                predict[res] += 1
             cover_time[feature][hand][task] += frame_time
             if hand == res:
                 acc_time[feature][hand][task] += frame_time
         last_data = data
-
-
 
 for parent, dirnames, filenames in os.walk(dir):
     for filename in filenames:
