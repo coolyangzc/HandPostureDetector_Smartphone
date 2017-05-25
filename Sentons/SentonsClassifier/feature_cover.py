@@ -21,6 +21,8 @@ bar_catg = ['L', 'R']
 
 cover_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name))]
 acc_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name))]
+tot_cover_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name))]
+tot_acc_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name))]
 
 FRAME_SKIP_L, FRAME_SKIP_R = 20, 20
 duplicate_removal = False
@@ -48,7 +50,7 @@ def analyse(fd, hand, mission, username):
         if feature == 'Lowest_Long':
             for i in range(2):
                 if lowest[i] <= 15 and lowest[i^1] <= 15:
-                    if lowest_long[i] >= 24 and 0 < lowest_long[i^1] <= 18:
+                    if lowest_long[i] >= 24 and 0 < lowest_long[i^1] <= 15:
                         return i
         if feature == 'Integration(>)':
             for i in range(2):
@@ -126,8 +128,58 @@ def analyse(fd, hand, mission, username):
                 acc_time[feature][hand][task] += frame_time
         last_data = data
 
+def output_to_file(output_filename):
+    outfd = open(output_filename, 'w')
+
+    for feature in range(len(feature_name)):
+        for hand in range(3):
+            cover_time[feature][hand][3] = 0
+            acc_time[feature][hand][3] = 0
+        for task in range(4):
+            cover_time[feature][2][task] = 0
+            acc_time[feature][2][task] = 0
+        for hand in range(2):
+            for task in range(3):
+                cover_time[feature][hand][3] += cover_time[feature][hand][task]
+                cover_time[feature][2][task] += cover_time[feature][hand][task]
+                cover_time[feature][2][3] += cover_time[feature][hand][task]
+                acc_time[feature][hand][3] += acc_time[feature][hand][task]
+                acc_time[feature][2][task] += acc_time[feature][hand][task]
+                acc_time[feature][2][3] += acc_time[feature][hand][task]
+
+    for feature in range(len(feature_name)):
+        print >> outfd, '%-23s%s%18s%18s' % (feature_name[feature], 'L', 'R', 'Sum')
+        for task in range(len(category_name)):
+            print >> outfd, '%4s%-8s' % ('', category_name[task]),
+            for hand in range(len(hand_name)):
+                print >> outfd, '%8.2fs, %5.1f%%' % \
+                                (cover_time[feature][hand][task] / 1000,
+                                 cover_time[feature][hand][task] / cover_time[TOTAL][hand][task] * 100),
+            print >> outfd, '\n%12s' % '',
+            for hand in range(len(hand_name)):
+                print >> outfd, '%8.2fs,' % (acc_time[feature][hand][task] / 1000),
+                if cover_time[feature][hand][task] > 0:
+                    print >> outfd, '%5.1f%%' % \
+                                    (acc_time[feature][hand][task] / cover_time[feature][hand][task] * 100),
+                else:
+                    print >> outfd, '%5.1f%%' % 0,
+            print >> outfd, '\n'
+        print >> outfd
+    outfd.close()
+
+last_user = ''
 for parent, dirnames, filenames in os.walk(dir):
     for filename in filenames:
+        user = parent.split('\\')[-1]
+        if user != last_user and last_user != '':
+            output_to_file('..\Sentons_Result\\feature_cover_' + last_user + '.txt')
+            for feature in range(len(feature_name)):
+                for hand in range(3):
+                    for task in range(4):
+                        tot_cover_time[feature][hand][task] += cover_time[feature][hand][task]
+                        tot_acc_time[feature][hand][task] += acc_time[feature][hand][task]
+                        cover_time[feature][hand][task] = 0
+                        acc_time[feature][hand][task] = 0
         fd = file(os.path.join(parent, filename))
         tag = fd.readline()
         tag = tag[:-1]
@@ -137,35 +189,14 @@ for parent, dirnames, filenames in os.walk(dir):
                 analyse(fd, i, tag, parent.split('\\')[-1])
                 break
 
-output_filename = '..\Sentons_Result\\feature_cover.txt'
-outfd = open(output_filename, 'w')
+        last_user = user
+
+output_to_file('..\Sentons_Result\\feature_cover_' + user + '.txt')
 
 for feature in range(len(feature_name)):
     for hand in range(2):
         for task in range(3):
-            cover_time[feature][hand][3] += cover_time[feature][hand][task]
-            cover_time[feature][2][task] += cover_time[feature][hand][task]
-            cover_time[feature][2][3] += cover_time[feature][hand][task]
-            acc_time[feature][hand][3] += acc_time[feature][hand][task]
-            acc_time[feature][2][task] += acc_time[feature][hand][task]
-            acc_time[feature][2][3] += acc_time[feature][hand][task]
+            cover_time[feature][hand][task] += tot_cover_time[feature][hand][task]
+            acc_time[feature][hand][task] += tot_acc_time[feature][hand][task]
 
-for feature in range(len(feature_name)):
-    print >> outfd, '%-23s%s%18s%18s' % (feature_name[feature], 'L', 'R', 'Sum')
-    for task in range(len(category_name)):
-        print >> outfd, '%4s%-8s' % ('',category_name[task]),
-        for hand in range(len(hand_name)):
-            print >> outfd, '%8.2fs, %5.1f%%' % \
-                    (cover_time[feature][hand][task] / 1000,
-                     cover_time[feature][hand][task] / cover_time[TOTAL][hand][task] * 100),
-        print >> outfd, '\n%12s' % '',
-        for hand in range(len(hand_name)):
-            print >> outfd, '%8.2fs,' % (acc_time[feature][hand][task] / 1000),
-            if cover_time[feature][hand][task] > 0:
-                print >> outfd, '%5.1f%%' % \
-                                (acc_time[feature][hand][task] / cover_time[feature][hand][task] * 100),
-            else:
-                print >> outfd, '%5.1f%%' % 0,
-        print >> outfd, '\n'
-    print >> outfd
-outfd.close()
+output_to_file('..\Sentons_Result\\feature_cover_tot.txt')

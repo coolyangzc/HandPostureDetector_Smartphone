@@ -12,7 +12,7 @@ category[1] = ['V_R', 'V_R_F', 'V_R_A']
 
 duplicate_removal = True
 
-def process(fd, catg, outfd):
+def process(fd, catg, outfd, user_id):
     lines = fd.readlines()
     last_data = []
     for line in lines[2:]:
@@ -22,6 +22,7 @@ def process(fd, catg, outfd):
         n, edge = data_to_edge(data)
         if n <= 0:
             continue
+        outfd.write(str(user_id) + ' ')
         for i in range(len(edge)):
             if edge[i] == 0:
                 outfd.write('0 ')
@@ -32,17 +33,22 @@ def process(fd, catg, outfd):
 
 output_filename = '..\Sentons_Result\data_unique.txt'
 outfd = open(output_filename, 'w')
-outfd.write(str(PIXELS) + '\n') 
+outfd.write(str(PIXELS) + '\n')
+last_parent = ''
+user_id = -1
 for parent, dirnames, filenames in os.walk(dir):
     for filename in filenames:
         if filename == 'data.txt':
             continue
         print 'Reading ' + os.path.join(parent, filename)
+        if parent != last_parent:
+            user_id += 1
         fd = file(os.path.join(parent, filename))
         tag = fd.readline()
         tag = tag[:-1]
         for i in range(len(category)):
             if tag in category[i]:
-                process(fd, i, outfd)
+                process(fd, i, outfd, user_id)
                 break
+        last_parent = parent
 outfd.close()
