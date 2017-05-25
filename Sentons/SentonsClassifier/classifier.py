@@ -44,15 +44,15 @@ for i in range(len(X)):
         else:
             X_train.extend(X[j])
             y_train.extend(y[j])
-    clf = tree.DecisionTreeClassifier(max_leaf_nodes = 32)
+    print 'Start training on ' + str(len(X_train)) + ' data'
+    clf = tree.DecisionTreeClassifier(max_leaf_nodes = 64)
     #clf = neighbors.KNeighborsClassifier(100, 'distance', 'auto', p=1)
     clf.fit(X_train, y_train)
-    print 'Start training on ' + str(len(X_train)) + ' data'
-    print('clf.fit(X_train, y_train) finish')
     answer_train = clf.predict(X_train)
     print('training accuracy: ' + str(np.mean(answer_train == y_train)))
     answer_test = clf.predict(X_test)
     print('test accuracy: ' + str(np.mean(answer_test == y_test)))
+    print
 
 '''
 X = X[:]

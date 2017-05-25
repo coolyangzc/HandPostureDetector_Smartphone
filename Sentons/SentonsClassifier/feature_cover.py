@@ -23,6 +23,7 @@ cover_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name))]
 acc_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name))]
 tot_cover_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name))]
 tot_acc_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name))]
+acc_and_cover_rate = [[[[] for i in range(4)] for i in range(3)] for i in range(len(feature_name))]
 
 FRAME_SKIP_L, FRAME_SKIP_R = 20, 20
 duplicate_removal = False
@@ -146,6 +147,14 @@ def output_to_file(output_filename):
                 acc_time[feature][hand][3] += acc_time[feature][hand][task]
                 acc_time[feature][2][task] += acc_time[feature][hand][task]
                 acc_time[feature][2][3] += acc_time[feature][hand][task]
+        for hand in range(len(hand_name)):
+            for task in range(len(category_name)):
+                cover_rate = cover_time[feature][hand][task] / cover_time[TOTAL][hand][task]
+                if cover_time[feature][hand][task] > 0:
+                    acc_rate = acc_time[feature][hand][task] / cover_time[feature][hand][task]
+                else:
+                    acc_rate = 0
+                acc_and_cover_rate[feature][hand][task].append((acc_rate, cover_rate))
 
     for feature in range(len(feature_name)):
         print >> outfd, '%-23s%s%18s%18s' % (feature_name[feature], 'L', 'R', 'Sum')
@@ -164,6 +173,27 @@ def output_to_file(output_filename):
                 else:
                     print >> outfd, '%5.1f%%' % 0,
             print >> outfd, '\n'
+        print >> outfd
+    outfd.close()
+
+def output_rate(output_filename):
+    outfd = open(output_filename, 'w')
+
+    for feature in range(len(feature_name)):
+        print >> outfd, '%s' % feature_name[feature]
+        for task in range(len(category_name)):
+            for hand in range(len(hand_name)):
+                print >> outfd, '%4s%-8s%-8s' % ('', category_name[task], hand_name[hand]),
+                acc_and_cover_rate[feature][hand][task].sort()
+                for pair in acc_and_cover_rate[feature][hand][task]:
+                    print >> outfd, '%5.1f%%' % float(pair[0] * 100),
+                print >> outfd
+                print >> outfd, '%20s' % '',
+                for pair in acc_and_cover_rate[feature][hand][task]:
+                    print >> outfd, '%5.1f%%' % float(pair[1] * 100),
+                print >> outfd
+                print >> outfd
+
         print >> outfd
     outfd.close()
 
@@ -193,6 +223,8 @@ for parent, dirnames, filenames in os.walk(dir):
 
 output_to_file('..\Sentons_Result\\feature_cover_' + user + '.txt')
 
+output_rate('..\Sentons_Result\\feature_cover_sorted_rate.txt')
+
 for feature in range(len(feature_name)):
     for hand in range(2):
         for task in range(3):
@@ -200,3 +232,4 @@ for feature in range(len(feature_name)):
             acc_time[feature][hand][task] += tot_acc_time[feature][hand][task]
 
 output_to_file('..\Sentons_Result\\feature_cover_tot.txt')
+
