@@ -61,6 +61,7 @@ namespace SentonsDemo
                                 processSignedDiv16(touchReportEntry.pos1),
                                 processSignedDiv16(touchReportEntry.pos2)));
                 }
+                print(sendData);
                 HttpListenerContext httpListenerContext = httpListener.GetContext();
                 string type = httpListenerContext.Request.Url.ToString().Split('/')[3];
                 httpListenerContext.Response.StatusCode = 200;

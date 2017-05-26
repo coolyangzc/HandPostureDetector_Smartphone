@@ -8,6 +8,8 @@ namespace SentonsDemo
 {
     public partial class Form1 : Form
     {
+        private const Boolean runPython = true;
+
         private SentonsReader reader;
         private TouchReader.TouchSet newestTouchset;
         private HistoryValueContainer LR = new HistoryValueContainer(1500, 0.01);
@@ -33,7 +35,8 @@ namespace SentonsDemo
 
         static void RunClassifier()
         {
-            RunCmd("python run.py");
+            if (runPython)
+                RunCmd("python run.py");
         }
 
         static string RunCmd(string command)
