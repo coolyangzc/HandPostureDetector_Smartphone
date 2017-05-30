@@ -10,7 +10,7 @@ category[0] = ['V_L', 'V_L_F', 'V_L_A']
 category[1] = ['V_R', 'V_R_F', 'V_R_A']
 #category[2] = ['V_D', 'V_D_F', 'V_D_A']
 
-duplicate_removal = True
+duplicate_removal = False
 
 def process(fd, catg, outfd, user_id):
     lines = fd.readlines()
@@ -31,7 +31,7 @@ def process(fd, catg, outfd, user_id):
         outfd.write(str(catg) + '\n')
         last_data = data
 
-output_filename = '..\Sentons_Result\data_unique.txt'
+output_filename = '..\Sentons_Result\data_nonunique.txt'
 outfd = open(output_filename, 'w')
 outfd.write(str(PIXELS) + '\n')
 last_parent = ''

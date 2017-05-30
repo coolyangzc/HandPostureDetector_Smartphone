@@ -5,6 +5,7 @@ PIXELS = 128
 
 def data_to_edge(data):
     n = int(data[0])
+    n_zero = 0
     edge = [0 for i in range(PIXELS) * 2]
     p = 1
     for touch in range(n):
@@ -13,6 +14,7 @@ def data_to_edge(data):
         pos0 = float(data[p+4])
         pos1 = float(data[p+5])
         if force == 0:
+            n_zero +=1
             continue
 
         if CONST:
@@ -52,5 +54,6 @@ def data_to_edge(data):
                         else:
                             edge[id] += trapezoid(i, pos1)
         p += 6
+    n -= n_zero
     return n, edge
 

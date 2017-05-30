@@ -14,7 +14,7 @@ y = [[]]
 def load_data():
     print 'File reading...'
 
-    filename = '..\Sentons_Result\data_unique.txt'
+    filename = '..\Sentons_Result\data_nonunique.txt'
     fd = file(filename)
     pixels = int(fd.readline()[:-1])
 
@@ -125,9 +125,9 @@ def train_model():
     joblib.dump(clf, 'dts.pkl')
 
 load_data()
-#new_user_test()
+new_user_test()
 #all_user_test()
-train_model()
+#train_model()
 
 
 
