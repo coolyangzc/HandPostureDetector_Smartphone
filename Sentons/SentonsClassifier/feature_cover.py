@@ -12,9 +12,11 @@ category[1] = ['V_R', 'V_R_F', 'V_R_A']
 #category[2] = ['V_D', 'V_D_F', 'V_D_A']
 
 hand_name = ['L', 'R', 'Sum']
-feature_name = ['TOTAL', 'ONE_SIDE', 'Count >= 3', 'Highest >= 95', 'Lowest_Long',
+feature_name = ['TOTAL', 'Empty', 'ONE_SIDE', 'Count >= 3', 'Highest >= 95', 'Lowest_Long',
                 'Integration(>)', 'Integration(>1)', 'Integration(empty, >)']
 TOTAL = 0
+EMPTY = 1
+INTEGRATION_EMPTY = -1
 category_name = ['Normal', 'Force', 'Dynamic', 'Sum']
 
 bar_catg = ['L', 'R']
@@ -25,7 +27,7 @@ tot_cover_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name)
 tot_acc_time = [[([0] * 4) for i in range(3)] for i in range(len(feature_name))]
 acc_and_cover_rate = [[[[] for i in range(4)] for i in range(3)] for i in range(len(feature_name))]
 
-FRAME_SKIP_L, FRAME_SKIP_R = 20, 20
+FRAME_SKIP_L, FRAME_SKIP_R = 50, 50
 duplicate_removal = False
 zero_removal = True
 
@@ -61,6 +63,8 @@ def analyse(fd, hand, mission, username):
             for i in range(2):
                 if predict[i] > predict[i^1] + 1:
                     return i
+        if feature == 'Empty' or 'Integration(empty, >)':
+            return -1
         return -1
 
     for i in range(3):
@@ -78,14 +82,8 @@ def analyse(fd, hand, mission, username):
         if duplicate_removal and cmp(data, last_data) == 0:
             continue
         n = int(data[0])
-        area = [0, 0]
-        forces = [0, 0]
-        count = [0, 0]
-        gravity = [0, 0]
+        area, forces, count, gravity, lowest_long, highest, longest = ([0, 0] for i in range(7))
         lowest = [116, 116]
-        lowest_long = [0, 0]
-        highest = [0, 0]
-        longest = [0, 0]
         p = 1
         for touch in range(n):
             bar = int(data[p]) ^ 1
@@ -107,11 +105,13 @@ def analyse(fd, hand, mission, username):
         frame_time = time - last_time
         sum_area = area[0] + area[1]
         if zero_removal and sum_area == 0:
+            cover_time[EMPTY][hand][task] += frame_time
+            acc_time[EMPTY][hand][task] += frame_time
             for i in range(2):
                 if predict[i] > predict[i^1]:
-                    cover_time[-1][hand][task] += frame_time
+                    cover_time[INTEGRATION_EMPTY][hand][task] += frame_time
                     if hand == i:
-                        acc_time[-1][hand][task] += frame_time
+                        acc_time[INTEGRATION_EMPTY][hand][task] += frame_time
             continue
         for bar in range(2):
             if area[bar] != 0:
@@ -129,9 +129,8 @@ def analyse(fd, hand, mission, username):
                 acc_time[feature][hand][task] += frame_time
         last_data = data
 
-def output_to_file(output_filename):
-    outfd = open(output_filename, 'w')
 
+def output_to_file(output_filename):
     for feature in range(len(feature_name)):
         for hand in range(3):
             cover_time[feature][hand][3] = 0
@@ -147,6 +146,8 @@ def output_to_file(output_filename):
                 acc_time[feature][hand][3] += acc_time[feature][hand][task]
                 acc_time[feature][2][task] += acc_time[feature][hand][task]
                 acc_time[feature][2][3] += acc_time[feature][hand][task]
+        if cover_time[TOTAL][2][3] == 0:
+            return
         for hand in range(len(hand_name)):
             for task in range(len(category_name)):
                 cover_rate = cover_time[feature][hand][task] / cover_time[TOTAL][hand][task]
@@ -156,6 +157,7 @@ def output_to_file(output_filename):
                     acc_rate = 0
                 acc_and_cover_rate[feature][hand][task].append((acc_rate, cover_rate))
 
+    outfd = open(output_filename, 'w')
     for feature in range(len(feature_name)):
         print >> outfd, '%-23s%s%18s%18s' % (feature_name[feature], 'L', 'R', 'Sum')
         for task in range(len(category_name)):

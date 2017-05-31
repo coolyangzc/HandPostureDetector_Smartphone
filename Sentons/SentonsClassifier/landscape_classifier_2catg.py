@@ -23,6 +23,8 @@ category[1] = ['H_R', 'H_R_F', 'H_R_A']
 duplicate_removal = False
 zero_removal = True
 
+FRAME_SKIP_L, FRAME_SKIP_R = 50, 50
+
 X = [[]]
 raw_data = [[]]
 y = [[]]
@@ -34,7 +36,7 @@ def process(fd, catg, user_id):
     last_data = []
     last_time = -1
     time = -1
-    for line in lines[2+50:-50]:
+    for line in lines[2 + FRAME_SKIP_L: -FRAME_SKIP_R]:
         last_time = time
         time = float(line[:-1].split(' ')[1])
         data = line[:-1].split(' ')[2:]
