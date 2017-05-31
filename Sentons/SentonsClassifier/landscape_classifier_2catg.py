@@ -7,15 +7,16 @@ import numpy as np
 from sklearn import svm
 from sklearn import tree
 from sklearn import neighbors
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.externals import joblib
 from sklearn.model_selection import KFold
 
 category = [[] for i in range(3)]
+
 category[0] = ['H_L', 'H_L_F', 'H_L_A']
 category[1] = ['H_R', 'H_R_F', 'H_R_A']
-#category[2] = ['H_D', 'H_D_F', 'H_D_A']
-#category[0] = ['H_L', 'H_L_F', 'H_L_A']
-#category[1] = ['H_R', 'H_R_F', 'H_R_A']
+category[2] = ['H_D', 'H_D_F', 'H_D_A']
 #category[0] = ['V_L', 'V_L_F', 'V_L_A']
 #category[1] = ['V_R', 'V_R_F', 'V_R_A']
 
@@ -84,10 +85,14 @@ def new_user_test():
                     area = [0, 0]
                     forces = [0, 0]
                     count = [0, 0]
+                    ucount = [0, 0]
+                    dcount = [0, 0]
                     gravity = [0, 0]
-                    lowest = [116, 116]
+                    #lowest = [116, 116]
+                    lowest = 116
+                    highest = 0
                     lowest_long = [0, 0]
-                    highest = [0, 0]
+                    #highest = [0, 0]
                     longest = [0, 0]
                     p = 1
                     for touch in range(n):
@@ -99,21 +104,24 @@ def new_user_test():
                         forces[bar] += force
                         area[bar] += force * (pos1 - pos0)
                         gravity[bar] += force * (pos1 - pos0) * (pos0 + pos1) / 2
-                        if pos0 < lowest[bar]:
-                            lowest[bar] = pos0
-                            lowest_long[bar] = pos1 - pos0
-                        highest[bar] = max(highest[bar], pos1)
+                        lowest = min(lowest, pos0)
+                        highest = max(highest, pos1)
                         longest[bar] = max(longest[bar], pos1 - pos0)
+                        if (pos1 + pos0 / 2) <= 58:
+                            dcount[bar] += 1
+                        else:
+                            ucount[bar] += 1
                         p += 6
                     features = []
                     for bar in range(2):
                         if area[bar] != 0:
                             gravity[bar] /= area[bar]
                         features.append(gravity[bar])
-                        features.append(lowest[bar])
-                        features.append(highest[bar])
-
-                    #features = [gravity]
+                        #features.append(count[bar])
+                        #features.append(dcount[bar])
+                        #features.append(ucount[bar])
+                    features.append(lowest)
+                    features.append(highest)
                     if i == j:
                         X_test.append(features)
                     else:
@@ -131,14 +139,16 @@ def new_user_test():
                     y_train.extend(y[j])
                 '''
             print 'Start training on ' + str(len(X_train)) + ' data'
-            clf = tree.DecisionTreeClassifier()
-            # clf = neighbors.KNeighborsClassifier(100, 'distance', 'auto', p=1)
+            #clf = RandomForestClassifier(n_estimators=100, max_leaf_nodes=8)
+            clf = tree.DecisionTreeClassifier(max_depth=2)
+            #clf = neighbors.KNeighborsClassifier(100, 'distance', 'auto', p=1)
+            #clf = GradientBoostingClassifier(n_estimators=100, max_leaf_nodes=8)
             clf.fit(X_train, y_train)
-            answer_train = clf.predict(X_train)
-            print('training accuracy: ' + str(np.mean(answer_train == y_train)))
-            answer_test = clf.predict(X_test)
-            print('test accuracy: ' + str(np.mean(answer_test == y_test)))
-            acc.append(np.mean(answer_test == y_test))
+            print clf.feature_importances_
+            print 'training accuracy: ' + str(clf.score(X_train, y_train))
+            test_acc = clf.score(X_test, y_test)
+            print 'test accuracy: ' + str(test_acc)
+            acc.append(test_acc)
             print
         print "Final accuracy: " + str(np.mean(acc))
 
@@ -262,6 +272,8 @@ load_data()
 new_user_test()
 #all_user_test()
 #train_model()
+
+
 
 
 
