@@ -14,9 +14,9 @@ from sklearn.model_selection import KFold
 
 category = [[] for i in range(3)]
 
-category[0] = ['H_L', 'H_L_F', 'H_L_A']
+category[0] = ['H_L', 'H_L_F', 'H_L_A', 'H_LR_A']
 category[1] = ['H_R', 'H_R_F', 'H_R_A']
-category[2] = ['H_D', 'H_D_F', 'H_D_A']
+#category[2] = ['H_D', 'H_D_F', 'H_D_A']
 #category[0] = ['V_L', 'V_L_F', 'V_L_A']
 #category[1] = ['V_R', 'V_R_F', 'V_R_A']
 
@@ -26,12 +26,17 @@ zero_removal = True
 X = [[]]
 raw_data = [[]]
 y = [[]]
+weight = [[]]
 
 
 def process(fd, catg, user_id):
     lines = fd.readlines()
     last_data = []
-    for line in lines[2:]:
+    last_time = -1
+    time = -1
+    for line in lines[2+50:-50]:
+        last_time = time
+        time = float(line[:-1].split(' ')[1])
         data = line[:-1].split(' ')[2:]
         if duplicate_removal and cmp(data, last_data) == 0:
             continue
@@ -39,8 +44,11 @@ def process(fd, catg, user_id):
         n, edge = data_to_edge(data)
         if zero_removal and n <= 0:
             continue
+        if last_time == -1:
+            continue
         X[user_id].append(edge)
         y[user_id].append(catg)
+        weight[user_id].append(time - last_time)
         raw_data[user_id].append(data)
 
 
@@ -60,6 +68,7 @@ def load_data():
                         user_id += 1
                         X.append([])
                         y.append([])
+                        weight.append([])
                         raw_data.append([])
                     last_parent = parent
                     process(fd, i, user_id)
@@ -76,24 +85,18 @@ def new_user_test():
     def machine_learning():
         acc = []
         for i in range(len(X)):
-            X_test = []
-            X_train = []
-            y_train = []
+            X_train, y_train, w_train = ([] for i in range(3))
+            X_test, y_test, w_test = ([] for i in range(3))
+
             for j in range(len(X)):
                 for data in raw_data[j]:
                     n = int(data[0])
-                    area = [0, 0]
-                    forces = [0, 0]
-                    count = [0, 0]
-                    ucount = [0, 0]
-                    dcount = [0, 0]
-                    gravity = [0, 0]
+                    area, forces, count, ucount, dcount, gravity, longest = ([0, 0] for i in range(7))
                     #lowest = [116, 116]
                     lowest = 116
                     highest = 0
                     lowest_long = [0, 0]
                     #highest = [0, 0]
-                    longest = [0, 0]
                     p = 1
                     for touch in range(n):
                         bar = int(data[p]) ^ 1
@@ -128,25 +131,19 @@ def new_user_test():
                         X_train.append(features)
                 if i == j:
                     y_test = y[j]
+                    w_test = weight[j]
                 else:
                     y_train.extend(y[j])
-                '''
-                if i == j:
-                    X_test = X[j]
-                    y_test = y[j]
-                else:
-                    X_train.extend(X[j])
-                    y_train.extend(y[j])
-                '''
+                    w_train.extend(weight[j])
             print 'Start training on ' + str(len(X_train)) + ' data'
-            #clf = RandomForestClassifier(n_estimators=100, max_leaf_nodes=8)
             clf = tree.DecisionTreeClassifier(max_depth=2)
+            #clf = RandomForestClassifier(n_estimators=100, max_leaf_nodes=8)
             #clf = neighbors.KNeighborsClassifier(100, 'distance', 'auto', p=1)
             #clf = GradientBoostingClassifier(n_estimators=100, max_leaf_nodes=8)
-            clf.fit(X_train, y_train)
+            clf.fit(X_train, y_train, w_train)
             print clf.feature_importances_
-            print 'training accuracy: ' + str(clf.score(X_train, y_train))
-            test_acc = clf.score(X_test, y_test)
+            print 'training accuracy: ' + str(clf.score(X_train, y_train, w_train))
+            test_acc = clf.score(X_test, y_test, w_test)
             print 'test accuracy: ' + str(test_acc)
             acc.append(test_acc)
             print
@@ -156,10 +153,11 @@ def new_user_test():
     def feature_calc(split):
         acc = []
         print "Split: " + str(split)
+        print 'test accuracy: ',
         for i in range(len(X)):
             y_test = y[i]
+            weight_test = weight[i]
             answer_test = []
-
             for data in raw_data[i]:
                 area = 0
                 gravity = 0
@@ -184,59 +182,54 @@ def new_user_test():
                     answer_test.append(1)
                 else:
                     answer_test.append(0)
-            '''
-            for data in X[i]:
-                gravity = 0
-                tot = 0
-                for j in range(PIXELS):
-                    gravity += (data[j] + data[j+PIXELS]) * j
-                    tot += data[j] + data[j+PIXELS]
-                gravity /= tot
-            '''
 
             answer_test = np.array(answer_test)
-            print('test accuracy: ' + str(np.mean(answer_test == y_test)))
-            acc.append(np.mean(answer_test == y_test))
+            test_acc = np.average(answer_test == y_test, weights = weight_test) * 100
+            print "%.2f, " % test_acc,
+            acc.append(test_acc)
+        print
         print "Final accuracy: " + str(np.mean(acc))
         print
 
     machine_learning()
-    #for i in range(40, 80, 1):
+    #for i in range(50, 80, 1):
         #feature_calc(i)
 
 
 def all_user_test():
     X_tot = []
     y_tot = []
-
+    w_tot = []
     for i in range(len(X)):
         X_tot.extend(X[i])
         y_tot.extend(y[i])
+        w_tot.extend(weight[i])
     X_tot = np.array(X_tot)
     y_tot = np.array(y_tot)
+    w_tot = np.array(w_tot)
 
     print 'Start training on ' + str(len(X_tot)) + ' data'
     sys.stdout.flush()
 
     kf = KFold(n_splits=5, shuffle=True)
     kf.get_n_splits(X)
-    error = []
-    for k, (train_index, test_index) in enumerate(kf.split(X_tot, y_tot)):
+    acc = []
+    for k, (train_index, test_index) in enumerate(kf.split(X_tot, y_tot, w_tot)):
         print('\n' + str(k))
         X_train, X_test = X_tot[train_index], X_tot[test_index]
         y_train, y_test = y_tot[train_index], y_tot[test_index]
+        w_train, w_test = w_tot[train_index], w_tot[test_index]
         clf = tree.DecisionTreeClassifier(max_leaf_nodes=32)
-        clf.fit(X_train, y_train)
+        clf.fit(X_train, y_train, w_train)
         print('clf.fit(X_train, y_train) finish')
-        answer_train = clf.predict(X_train)
-        print('training accuracy: ' + str(np.mean(answer_train == y_train)))
-        answer_test = clf.predict(X_test)
-        print('test accuracy: ' + str(np.mean(answer_test == y_test)))
-        error.append(np.mean(answer_test == y_test))
+        print 'training accuracy: ' + str(clf.score(X_train, y_train, w_train))
 
-        # Averaging
+        test_acc = clf.score(X_test, y_test, w_test)
+        print 'test accuracy: ' + str(test_acc)
+        acc.append(test_acc)
+
     print "===========Final Result==========="
-    print "Final accuracy: " + str(np.mean(error))
+    print "Final accuracy: " + str(np.mean(acc))
 
 
 def train_model():
