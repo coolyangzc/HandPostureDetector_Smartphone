@@ -26,7 +26,6 @@ zero_removal = True
 FRAME_SKIP_L, FRAME_SKIP_R = 50, 50
 
 X = [[]]
-raw_data = [[]]
 y = [[]]
 weight = [[]]
 
@@ -48,10 +47,10 @@ def process(fd, catg, user_id):
             continue
         if last_time == -1:
             continue
-        X[user_id].append(edge)
+        X[user_id].append(data)
         y[user_id].append(catg)
         weight[user_id].append(time - last_time)
-        raw_data[user_id].append(data)
+
 
 
 def load_data():
@@ -71,7 +70,6 @@ def load_data():
                         X.append([])
                         y.append([])
                         weight.append([])
-                        raw_data.append([])
                     last_parent = parent
                     process(fd, i, user_id)
                     break
@@ -91,7 +89,7 @@ def new_user_test():
             X_test, y_test, w_test = ([] for i in range(3))
 
             for j in range(len(X)):
-                for data in raw_data[j]:
+                for data in X[j]:
                     n = int(data[0])
                     area, forces, count, ucount, dcount, gravity, longest = ([0, 0] for i in range(7))
                     #lowest = [116, 116]
@@ -160,7 +158,7 @@ def new_user_test():
             y_test = y[i]
             weight_test = weight[i]
             answer_test = []
-            for data in raw_data[i]:
+            for data in X[i]:
                 area = 0
                 gravity = 0
                 lowest = 128

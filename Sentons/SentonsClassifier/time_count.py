@@ -95,4 +95,5 @@ for parent, dirnames, filenames in os.walk(dir):
                 analyse(fd, i, tag, parent.split('\\')[-1])
                 break
 print np.mean(frame_times)
+print np.std(frame_times)
 #output_to_file('..\Sentons_Result\\time_landscape_tot.txt')

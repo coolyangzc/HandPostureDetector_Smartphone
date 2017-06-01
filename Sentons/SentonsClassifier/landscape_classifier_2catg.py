@@ -14,19 +14,19 @@ from sklearn.model_selection import KFold
 
 category = [[] for i in range(3)]
 
-category[0] = ['H_L', 'H_L_F', 'H_L_A', 'H_LR_A']
+category[0] = ['H_L', 'H_L_F', 'H_L_A']#, 'H_LR_A']
 category[1] = ['H_R', 'H_R_F', 'H_R_A']
 #category[2] = ['H_D', 'H_D_F', 'H_D_A']
 #category[0] = ['V_L', 'V_L_F', 'V_L_A']
 #category[1] = ['V_R', 'V_R_F', 'V_R_A']
 
+eps = 1e-8
 duplicate_removal = False
 zero_removal = True
 
 FRAME_SKIP_L, FRAME_SKIP_R = 50, 50
 
 X = [[]]
-raw_data = [[]]
 y = [[]]
 weight = [[]]
 
@@ -48,10 +48,9 @@ def process(fd, catg, user_id):
             continue
         if last_time == -1:
             continue
-        X[user_id].append(edge)
+        X[user_id].append(data)
         y[user_id].append(catg)
         weight[user_id].append(time - last_time)
-        raw_data[user_id].append(data)
 
 
 def load_data():
@@ -71,7 +70,6 @@ def load_data():
                         X.append([])
                         y.append([])
                         weight.append([])
-                        raw_data.append([])
                     last_parent = parent
                     process(fd, i, user_id)
                     break
@@ -91,7 +89,7 @@ def new_user_test():
             X_test, y_test, w_test = ([] for i in range(3))
 
             for j in range(len(X)):
-                for data in raw_data[j]:
+                for data in X[j]:
                     n = int(data[0])
                     area, forces, count, ucount, dcount, gravity, longest = ([0, 0] for i in range(7))
                     #lowest = [116, 116]
@@ -160,7 +158,7 @@ def new_user_test():
             y_test = y[i]
             weight_test = weight[i]
             answer_test = []
-            for data in raw_data[i]:
+            for data in X[i]:
                 area = 0
                 gravity = 0
                 lowest = 128
@@ -193,9 +191,11 @@ def new_user_test():
         print "Final accuracy: " + str(np.mean(acc))
         print
 
-    machine_learning()
-    #for i in range(50, 80, 1):
-        #feature_calc(i)
+    #machine_learning()
+    split = 69
+    while split <= 70:
+        feature_calc(split)
+        split += .1
 
 
 def all_user_test():
@@ -263,8 +263,60 @@ def train_model():
     clf.fit(X_tot, y_tot)
     joblib.dump(clf, 'dts.pkl')
 
+
+def calc_rate(X, y, w, target_acc):
+
+    g = []
+    for i in range(len(X)):
+        data = X[i]
+        n = int(data[0])
+        area, gravity = 0, 0
+        p = 1
+        for touch in range(n):
+            force = int(data[p + 2])
+            pos0 = float(data[p + 4])
+            pos1 = float(data[p + 5])
+            if force == 0:
+                continue
+            area += force * (pos1 - pos0)
+            gravity += force * (pos1 - pos0) * (pos0 + pos1) / 2
+            p += 6
+        g.append(gravity / area)
+
+    def acc_rate(l, r):
+        acc, cover = 0, 0
+        for i in range(len(g)):
+            if g[i] <= l:
+                cover += w[i]
+                if y[i] == 1:
+                    acc += w[i]
+            if g[i] >= r:
+                cover += w[i]
+                if y[i] == 0:
+                    acc += w[i]
+        return acc / np.sum(w), cover / np.sum(w)
+
+
+    l, r, bestL, bestR = 0, 0, 0, 0
+    l = 0
+    while l <= 116:
+        r = l + (bestR - bestL)
+        while r <= 116:
+            acc, cover = acc_rate(l, r)
+            if acc + eps >= target_acc:
+                bestL, bestR = l, r
+            if cover + eps < target_acc:
+                break
+            r += 0.1
+        l += 0.1
+    print bestL, bestR
+
 load_data()
-new_user_test()
+
+for i in range(len(X)):
+    print i
+    calc_rate(X[i], y[i], weight[i], 1.00)
+#new_user_test()
 #all_user_test()
 #train_model()
 
