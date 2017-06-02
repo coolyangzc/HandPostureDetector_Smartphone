@@ -14,6 +14,10 @@ class features:
 
 class identifiers:
     def __init__(self):
+        self.identifier_name = ['ONE_SIDE', 'Count >= 3', 'Highest >= 95', 'Lowest_Long',
+                                'Integration(>)', 'Integration(>1)']
+        self.result = [0 for i in range(len(self.identifier_name))]
+
 
 def data_to_edge(data):
     n = int(data[0])
@@ -71,8 +75,8 @@ def data_to_edge(data):
 
 
 def data_to_features(data):
-    n = int(data[0])
     f = features()
+    n = int(data[0])
     p = 1
     for touch in range(n):
         bar = int(data[p]) ^ 1
@@ -97,3 +101,43 @@ def data_to_features(data):
     return f
 
 
+def features_to_identifiers(f):
+
+    def calc(f, identifier):
+        if identifier == 'ONE_SIDE':
+            for i in range(2):
+                if f.count[i] == 0:
+                    return i ^ 1
+        if identifier == 'Count >= 3':
+            for i in range(2):
+                if f.count[i] >= 3 > f.count[i ^ 1]:
+                    return i ^ 1
+        if identifier == 'Highest >= 95':
+            for i in range(2):
+                if f.highest[i] >= 95 > f.highest[i ^ 1]:
+                    return i
+        if identifier == 'Lowest_Long':
+            for i in range(2):
+                if f.lowest[i] <= 15 and f.lowest[i ^ 1] <= 15:
+                    if f.lowest_long[i] >= 24 and 0 < f.lowest_long[i ^ 1] <= 15:
+                        return i
+        if identifier == 'Integration(>)':
+            for i in range(2):
+                if predict[i] > predict[i ^ 1]:
+                    return i
+        if identifier == 'Integration(>1)':
+            for i in range(2):
+                if predict[i] > predict[i ^ 1] + 1:
+                    return i
+        if identifier == 'Empty' or 'Integration(empty, >)':
+            return -1
+        return -1
+
+
+    iden = identifiers()
+    predict = [0, 0]
+    for x in range(len(iden.identifier_name)):
+        iden.result[x] = calc(f, iden.identifier_name[x])
+        if iden.result[x] != -1:
+            predict[iden.result[x]] += 1
+    return iden

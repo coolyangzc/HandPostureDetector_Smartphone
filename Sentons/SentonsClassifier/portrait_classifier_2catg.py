@@ -2,6 +2,7 @@ import sys
 import os.path
 from data_format import data_to_edge
 from data_format import data_to_features
+from data_format import features_to_identifiers
 
 import numpy as np
 from sklearn import svm
@@ -156,36 +157,6 @@ def new_user_test():
         #print "Final accuracy: " + str(np.mean(acc))
 
     def feature_calc():
-        def calc_feature(used_feature):
-            feature = feature_name[used_feature]
-            if feature == 'ONE_SIDE':
-                for i in range(2):
-                    if f.count[i] == 0:
-                        return i ^ 1
-            if feature == 'Count >= 3':
-                for i in range(2):
-                    if f.count[i] >= 3 > f.count[i ^ 1]:
-                        return i ^ 1
-            if feature == 'Highest >= 95':
-                for i in range(2):
-                    if f.highest[i] >= 95 > f.highest[i ^ 1]:
-                        return i
-            if feature == 'Lowest_Long':
-                for i in range(2):
-                    if f.lowest[i] <= 15 and f.lowest[i ^ 1] <= 15:
-                        if f.lowest_long[i] >= 24 and 0 < f.lowest_long[i ^ 1] <= 15:
-                            return i
-            if feature == 'Integration(>)':
-                for i in range(2):
-                    if predict[i] > predict[i ^ 1]:
-                        return i
-            if feature == 'Integration(>1)':
-                for i in range(2):
-                    if predict[i] > predict[i ^ 1] + 1:
-                        return i
-            if feature == 'Empty' or 'Integration(empty, >)':
-                return -1
-            return -1
 
         X_test, y_test, w_test = [], [], []
         for i in range(len(X)):
@@ -194,18 +165,12 @@ def new_user_test():
             w_test.extend(weight[i])
         for i in range(len(X_test)):
             f = data_to_features(X_test[i])
+            iden = features_to_identifiers(f)
             tot_time[y_test[i]] += w_test[i]
-            predict = [0, 0]
-            for feature in range(len(feature_name)):
-                res = calc_feature(feature)
-                if res == -1:
-                    continue
-                if not feature_name[feature].startswith('Integration'):
-                    predict[res] += 1
-                if feature_name[feature] == 'Integration(>)':
-                    prob_time[y_test[i]] += w_test[i]
-                    prob_matrix[y_test[i]][res] += w_test[i]
-
+            p = iden.identifier_name.index('Integration(>)')
+            if iden.result[p] != -1:
+                prob_time[y_test[i]] += w_test[i]
+                prob_matrix[y_test[i]][iden.result[p]] += w_test[i]
 
     #machine_learning()
     feature_calc()
