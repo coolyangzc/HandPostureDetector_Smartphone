@@ -7,14 +7,15 @@ PIXELS = 128
 
 class features:
     def __init__(self):
-        chars = ['area', 'forces', 'count', 'gravity', 'lowest_long', 'highest', 'longest']
+        chars = ['area', 'forces', 'count', 'gravity', 'lowest_long', 'highest', 'longest', 'distinct']
         for char in chars: setattr(self, char, [0,0])
+        self.pos_list = [[], []]
         self.lowest = [116, 116]
 
 
 class identifiers:
     def __init__(self):
-        self.identifier_name = ['ONE_SIDE', 'Count >= 3', 'Highest >= 95', 'Lowest_Long',
+        self.identifier_name = ['ONE_SIDE', 'Count >= 3', 'Highest >= 95', 'Lowest_Long', 'Distinct',
                                 'Integration(>)', 'Integration(>1)']
         self.result = [0 for i in range(len(self.identifier_name))]
 
@@ -85,6 +86,7 @@ def data_to_features(data):
         pos1 = float(data[p + 5])
         if force == 0:
             continue
+        f.pos_list[bar].append((pos0, pos1))
         f.count[bar] += 1
         f.forces[bar] += force
         f.area[bar] += force * (pos1 - pos0)
@@ -95,9 +97,17 @@ def data_to_features(data):
         f.highest[bar] = max(f.highest[bar], pos1)
         f.longest[bar] = max(f.longest[bar], pos1 - pos0)
         p += 6
-    for i in range(2):
+    for bar in range(2):
         if f.area[bar] > 0:
             f.gravity[bar] /= f.area[bar]
+        f.pos_list[bar].sort()
+        last_pos1 = -100
+        for pos_pair in f.pos_list[bar]:
+            if pos_pair[0] > 45:
+                break
+            if pos_pair[0] > last_pos1 + 2:
+                last_pos1 = pos_pair[1]
+                f.distinct[bar] += 1
     return f
 
 
@@ -106,8 +116,8 @@ def features_to_identifiers(f):
     def calc(f, identifier):
         if identifier == 'ONE_SIDE':
             for i in range(2):
-                if f.count[i] == 0:
-                    return i ^ 1
+                if f.count[i] > 0 and f.count[i^1] == 0:
+                    return i
         if identifier == 'Count >= 3':
             for i in range(2):
                 if f.count[i] >= 3 > f.count[i ^ 1]:
@@ -121,6 +131,10 @@ def features_to_identifiers(f):
                 if f.lowest[i] <= 15 and f.lowest[i ^ 1] <= 15:
                     if f.lowest_long[i] >= 24 and 0 < f.lowest_long[i ^ 1] <= 15:
                         return i
+        if identifier == 'Distinct':
+            for i in range(2):
+                if f.distinct[i] > f.distinct[i^1] == 1:
+                    return i^1
         if identifier == 'Integration(>)':
             for i in range(2):
                 if predict[i] > predict[i ^ 1]:

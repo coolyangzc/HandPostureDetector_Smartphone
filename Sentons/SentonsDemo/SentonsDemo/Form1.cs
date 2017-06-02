@@ -8,7 +8,7 @@ namespace SentonsDemo
 {
     public partial class Form1 : Form
     {
-        private const Boolean runPython = true;
+        private const Boolean runPython = false;
 
         private SentonsReader reader;
         private TouchReader.TouchSet newestTouchset;

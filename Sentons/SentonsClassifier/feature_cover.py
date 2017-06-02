@@ -12,7 +12,7 @@ category[1] = ['V_R', 'V_R_F', 'V_R_A']
 #category[2] = ['V_D', 'V_D_F', 'V_D_A']
 
 hand_name = ['L', 'R', 'Sum']
-feature_name = ['TOTAL', 'Empty', 'ONE_SIDE', 'Count >= 3', 'Highest >= 95', 'Lowest_Long',
+feature_name = ['TOTAL', 'Empty', 'ONE_SIDE', 'Count >= 3', 'Highest >= 95', 'Lowest_Long', 'Distinct',
                 'Integration(>)', 'Integration(>1)', 'Integration(empty, >)']
 TOTAL = 0
 EMPTY = 1
@@ -55,6 +55,10 @@ def analyse(fd, hand, mission, username):
                 if lowest[i] <= 15 and lowest[i^1] <= 15:
                     if lowest_long[i] >= 24 and 0 < lowest_long[i^1] <= 15:
                         return i
+        if feature == 'Distinct':
+            for i in range(2):
+                if distinct[i] > distinct[i^1] == 1:
+                    return i^1
         if feature == 'Integration(>)':
             for i in range(2):
                 if predict[i] > predict[i^1]:
@@ -81,15 +85,21 @@ def analyse(fd, hand, mission, username):
         data = line[:-1].split(' ')[2:]
         if duplicate_removal and cmp(data, last_data) == 0:
             continue
+        if last_time == -1:
+            continue
         n = int(data[0])
-        area, forces, count, gravity, lowest_long, highest, longest = ([0, 0] for i in range(7))
+        area, forces, count, gravity, lowest_long, highest, longest, distinct = ([0, 0] for i in range(8))
         lowest = [116, 116]
+        pos_list = [[], []]
         p = 1
         for touch in range(n):
             bar = int(data[p]) ^ 1
             force = int(data[p + 2])
             pos0 = float(data[p + 4])
             pos1 = float(data[p + 5])
+            if force == 0:
+                continue
+            pos_list[bar].append((pos0, pos1))
             count[bar] += 1
             forces[bar] += force
             area[bar] += force * (pos1 - pos0)
@@ -100,8 +110,19 @@ def analyse(fd, hand, mission, username):
             highest[bar] = max(highest[bar], pos1)
             longest[bar] = max(longest[bar], pos1 - pos0)
             p += 6
-        if last_time == -1:
-            continue
+
+        for bar in range(2):
+            if area[bar] != 0:
+                gravity[bar] /= area[bar]
+            pos_list[bar].sort()
+            last_pos1 = -100
+            for pos_pair in pos_list[bar]:
+                if pos_pair[0] > 45:
+                    break
+                if pos_pair[0] > last_pos1 + 2:
+                    last_pos1 = pos_pair[1]
+                    distinct[bar] += 1
+
         frame_time = time - last_time
         sum_area = area[0] + area[1]
         if zero_removal and sum_area == 0:
@@ -113,9 +134,7 @@ def analyse(fd, hand, mission, username):
                     if hand == i:
                         acc_time[INTEGRATION_EMPTY][hand][task] += frame_time
             continue
-        for bar in range(2):
-            if area[bar] != 0:
-                gravity[bar] /= area[bar]
+
 
         predict[0] = predict[1] = 0
         for feature in range(len(feature_name)):
@@ -204,6 +223,7 @@ for parent, dirnames, filenames in os.walk(dir):
     for filename in filenames:
         user = parent.split('\\')[-1]
         if user != last_user and last_user != '':
+            print 'Browsing ' + last_user
             output_to_file('..\Sentons_Result\\feature_cover_' + last_user + '.txt')
             for feature in range(len(feature_name)):
                 for hand in range(3):
@@ -217,12 +237,12 @@ for parent, dirnames, filenames in os.walk(dir):
         tag = tag[:-1]
         for i in range(len(category)):
             if tag in category[i]:
-                print 'Reading ' + os.path.join(parent, filename)
                 analyse(fd, i, tag, parent.split('\\')[-1])
                 break
 
         last_user = user
 
+print 'Browsing ' + user
 output_to_file('..\Sentons_Result\\feature_cover_' + user + '.txt')
 
 output_rate('..\Sentons_Result\\feature_cover_sorted_rate.txt')

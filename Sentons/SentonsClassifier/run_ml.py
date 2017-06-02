@@ -1,7 +1,10 @@
 import httplib
+from data_format import data_to_edge
+from sklearn.externals import joblib
 
-from data_format import data_to_features
-from data_format import features_to_identifiers
+clf = joblib.load('dts.pkl')
+
+print 'model loaded successfully'
 
 while True:
     httpClient = httplib.HTTPConnection('127.0.0.1', 8000, timeout=10)
@@ -9,10 +12,12 @@ while True:
     response = httpClient.getresponse()
     data = response.read().split(' ')
     
-    features = data_to_features(data)
-    identifiers = features_to_identifiers(features)
-    p = identifiers.identifier_name.index('Integration(>)')
-    result = identifiers.result[p]
+    n, edge = data_to_edge(data)
+    if n == 0:
+        result = -1
+    else:
+        edges = [edge]
+        result = clf.predict(edges)[0]
     #print result
 
     httpClient.request('GET', '/' + str(result));
