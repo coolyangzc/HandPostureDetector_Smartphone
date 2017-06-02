@@ -14,7 +14,7 @@ from sklearn.model_selection import KFold
 
 category = [[] for i in range(3)]
 
-category[0] = ['H_L', 'H_L_F', 'H_L_A']#, 'H_LR_A']
+category[0] = ['H_L', 'H_L_F', 'H_L_A', 'H_LR_A']
 category[1] = ['H_R', 'H_R_F', 'H_R_A']
 #category[2] = ['H_D', 'H_D_F', 'H_D_A']
 #category[0] = ['V_L', 'V_L_F', 'V_L_A']
@@ -152,6 +152,7 @@ def new_user_test():
 
     def feature_calc(split):
         acc = []
+        w_tot = 0
         print "Split: " + str(split)
         print 'test accuracy: ',
         for i in range(len(X)):
@@ -186,16 +187,17 @@ def new_user_test():
             answer_test = np.array(answer_test)
             test_acc = np.average(answer_test == y_test, weights = weight_test) * 100
             print "%.2f, " % test_acc,
-            acc.append(test_acc)
+            acc.append(test_acc * np.sum(weight_test))
+            w_tot += np.sum(weight_test)
         print
-        print "Final accuracy: " + str(np.mean(acc))
+        print "Final accuracy: " + str(np.sum(acc) / w_tot)
         print
 
     #machine_learning()
     split = 69
     while split <= 70:
         feature_calc(split)
-        split += .1
+        split += .01
 
 
 def all_user_test():
@@ -296,7 +298,6 @@ def calc_rate(X, y, w, target_acc):
                     acc += w[i]
         return acc / np.sum(w), cover / np.sum(w)
 
-
     l, r, bestL, bestR = 0, 0, 0, 0
     l = 0
     while l <= 116:
@@ -307,9 +308,22 @@ def calc_rate(X, y, w, target_acc):
                 bestL, bestR = l, r
             if cover + eps < target_acc:
                 break
-            r += 0.1
-        l += 0.1
-    print bestL, bestR
+            r += 1
+        l += 1
+    l_start, l_end = bestL - 5, bestL + 5
+    r_start, r_end = bestR - 5, bestR + 5
+    l = l_start
+    while l <= l_end:
+        r = max(r_start, l + (bestR - bestL))
+        while r <= r_end:
+            acc, cover = acc_rate(l, r)
+            if acc + eps >= target_acc:
+                bestL, bestR = l, r
+            if cover + eps < target_acc:
+                break
+            r += 0.01
+        l += 0.01
+    print bestL, bestR, bestR - bestL
 
 load_data()
 

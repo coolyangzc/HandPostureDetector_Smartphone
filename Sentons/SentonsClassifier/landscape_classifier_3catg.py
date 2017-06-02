@@ -14,11 +14,17 @@ from sklearn.model_selection import KFold
 
 category = [[] for i in range(3)]
 
-category[0] = ['H_L', 'H_L_F', 'H_L_A', 'H_LR_A']
-category[1] = ['H_R', 'H_R_F', 'H_R_A']
-category[2] = ['H_D', 'H_D_F', 'H_D_A']
-#category[0] = ['V_L', 'V_L_F', 'V_L_A']
-#category[1] = ['V_R', 'V_R_F', 'V_R_A']
+category[0] = ['H_L_F']
+category[1] = ['H_R_F']
+category[2] = ['H_D_F']
+
+#category[0] = ['H_L', 'H_L_F', 'H_L_A', 'H_LR_A']
+#category[1] = ['H_R', 'H_R_F', 'H_R_A']
+#category[2] = ['H_D', 'H_D_F', 'H_D_A']
+
+matrix = [[0, 0, 0] for i in range(3)]
+
+
 
 duplicate_removal = False
 zero_removal = True
@@ -50,7 +56,6 @@ def process(fd, catg, user_id):
         X[user_id].append(data)
         y[user_id].append(catg)
         weight[user_id].append(time - last_time)
-
 
 
 def load_data():
@@ -92,11 +97,9 @@ def new_user_test():
                 for data in X[j]:
                     n = int(data[0])
                     area, forces, count, ucount, dcount, gravity, longest = ([0, 0] for i in range(7))
-                    #lowest = [116, 116]
+                    area_both, gravity_both = 0, 0
                     lowest = 116
                     highest = 0
-                    lowest_long = [0, 0]
-                    #highest = [0, 0]
                     p = 1
                     for touch in range(n):
                         bar = int(data[p]) ^ 1
@@ -106,7 +109,9 @@ def new_user_test():
                         count[bar] += 1
                         forces[bar] += force
                         area[bar] += force * (pos1 - pos0)
+                        area_both += force * (pos1 - pos0)
                         gravity[bar] += force * (pos1 - pos0) * (pos0 + pos1) / 2
+                        gravity_both += force * (pos1 - pos0) * (pos0 + pos1) / 2
                         lowest = min(lowest, pos0)
                         highest = max(highest, pos1)
                         longest[bar] = max(longest[bar], pos1 - pos0)
@@ -119,10 +124,11 @@ def new_user_test():
                     for bar in range(2):
                         if area[bar] != 0:
                             gravity[bar] /= area[bar]
-                        features.append(gravity[bar])
+                        #features.append(gravity[bar])
                         #features.append(count[bar])
                         #features.append(dcount[bar])
                         #features.append(ucount[bar])
+                    #features.append(gravity_both / area_both)
                     features.append(lowest)
                     features.append(highest)
                     if i == j:
@@ -136,6 +142,7 @@ def new_user_test():
                     y_train.extend(y[j])
                     w_train.extend(weight[j])
             print 'Start training on ' + str(len(X_train)) + ' data'
+            #clf = tree.DecisionTreeClassifier()
             clf = tree.DecisionTreeClassifier(max_depth=2)
             #clf = RandomForestClassifier(n_estimators=100, max_leaf_nodes=8)
             #clf = neighbors.KNeighborsClassifier(100, 'distance', 'auto', p=1)
@@ -146,54 +153,21 @@ def new_user_test():
             test_acc = clf.score(X_test, y_test, w_test)
             print 'test accuracy: ' + str(test_acc)
             acc.append(test_acc)
+            res = clf.predict(X_test)
+            for i in range(len(res)):
+                matrix[y_test[i]][res[i]] += w_test[i]
             print
         print "Final accuracy: " + str(np.mean(acc))
 
-
-    def feature_calc(split):
-        acc = []
-        print "Split: " + str(split)
-        print 'test accuracy: ',
-        for i in range(len(X)):
-            y_test = y[i]
-            weight_test = weight[i]
-            answer_test = []
-            for data in X[i]:
-                area = 0
-                gravity = 0
-                lowest = 128
-                highest = 0
-                n = int(data[0])
-                p = 1
-                for touch in range(n):
-                    bar = int(data[p])
-                    force = int(data[p + 2])
-                    pos0 = float(data[p + 4])
-                    pos1 = float(data[p + 5])
-                    if force == 0:
-                        continue
-                    area += force * (pos1 - pos0)
-                    gravity += force * (pos1 - pos0) * (pos0 + pos1) / 2
-                    lowest = min(pos0, lowest)
-                    highest = max(pos1, highest)
-                    p += 6
-                gravity /= area
-                if gravity <= split:
-                    answer_test.append(1)
-                else:
-                    answer_test.append(0)
-
-            answer_test = np.array(answer_test)
-            test_acc = np.average(answer_test == y_test, weights = weight_test) * 100
-            print "%.2f, " % test_acc,
-            acc.append(test_acc)
-        print
-        print "Final accuracy: " + str(np.mean(acc))
-        print
+        for i in range(3):
+            tot = 0
+            for j in range(3):
+                tot += matrix[i][j]
+            for j in range(3):
+                print "%.2f%%" % (matrix[i][j] / tot * 100),
+            print
 
     machine_learning()
-    #for i in range(50, 80, 1):
-        #feature_calc(i)
 
 
 def all_user_test():

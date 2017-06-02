@@ -7,7 +7,7 @@ dir = "..\Sentons_Data"
 #pos: Up = 116, Down = 0
 
 category = [[] for i in range(2)]
-category[0] = ['H_L', 'H_L_F', 'H_L_A']
+category[0] = ['H_L', 'H_L_F', 'H_L_A', 'H_LR_A']
 category[1] = ['H_R', 'H_R_F', 'H_R_A']
 #category[2] = ['V_D', 'V_D_F', 'V_D_A']
 
@@ -39,7 +39,7 @@ def analyse(fd, hand, mission, username):
         if feature == 'TOTAL':
             return hand
         if feature == 'Gravity':
-            if gravity_both <= 58:
+            if gravity_both <= 69.35:
                 return 1
             else:
                 return 0
@@ -54,7 +54,7 @@ def analyse(fd, hand, mission, username):
         if feature == 'Empty' or 'Integration(empty, >)':
             return -1
         return -1
-
+    task = 0
     for i in range(3):
         if mission == category[hand][i]:
             task = i
