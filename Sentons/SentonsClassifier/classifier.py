@@ -49,7 +49,7 @@ def new_user_test():
                 X_train.extend(X[j])
                 y_train.extend(y[j])
         print 'Start training on ' + str(len(X_train)) + ' data'
-        clf = tree.DecisionTreeClassifier(max_leaf_nodes=32)
+        clf = tree.DecisionTreeClassifier()
         # clf = neighbors.KNeighborsClassifier(100, 'distance', 'auto', p=1)
         clf.fit(X_train, y_train)
         answer_train = clf.predict(X_train)

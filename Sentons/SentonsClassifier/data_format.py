@@ -2,6 +2,18 @@ EDGE_MM = 116
 CONST = False
 PIXELS = 128
 
+#bar: L = 1, R = 0
+#pos: Up = 116, Down = 0
+
+class features:
+    def __init__(self):
+        chars = ['area', 'forces', 'count', 'gravity', 'lowest_long', 'highest', 'longest']
+        for char in chars: setattr(self, char, [0,0])
+        self.lowest = [116, 116]
+
+
+class identifiers:
+    def __init__(self):
 
 def data_to_edge(data):
     n = int(data[0])
@@ -56,4 +68,32 @@ def data_to_edge(data):
         p += 6
     n -= n_zero
     return n, edge
+
+
+def data_to_features(data):
+    n = int(data[0])
+    f = features()
+    p = 1
+    for touch in range(n):
+        bar = int(data[p]) ^ 1
+        force = int(data[p + 2])
+        pos0 = float(data[p + 4])
+        pos1 = float(data[p + 5])
+        if force == 0:
+            continue
+        f.count[bar] += 1
+        f.forces[bar] += force
+        f.area[bar] += force * (pos1 - pos0)
+        f.gravity[bar] += force * (pos1 - pos0) * (pos0 + pos1) / 2
+        if pos0 < f.lowest[bar]:
+            f.lowest[bar] = pos0
+            f.lowest_long[bar] = pos1 - pos0
+        f.highest[bar] = max(f.highest[bar], pos1)
+        f.longest[bar] = max(f.longest[bar], pos1 - pos0)
+        p += 6
+    for i in range(2):
+        if f.area[bar] > 0:
+            f.gravity[bar] /= f.area[bar]
+    return f
+
 
