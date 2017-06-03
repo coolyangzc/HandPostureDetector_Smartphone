@@ -1,5 +1,5 @@
 EDGE_MM = 116
-CONST = False
+CONST = True
 PIXELS = 128
 
 #bar: L = 1, R = 0

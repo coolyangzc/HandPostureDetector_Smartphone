@@ -12,7 +12,7 @@ category[1] = ['V_R', 'V_R_F', 'V_R_A']
 #category[2] = ['V_D', 'V_D_F', 'V_D_A']
 
 hand_name = ['L', 'R', 'Sum']
-feature_name = ['TOTAL', 'Empty', 'ONE_SIDE', 'Count >= 3', 'Highest >= 95', 'Lowest_Long', 'Distinct',
+feature_name = ['TOTAL', 'Empty', 'ONE_SIDE', 'Count >= 3', 'Highest', 'Lowest_Long', 'Distinct',
                 'Integration(>)', 'Integration(>1)', 'Integration(empty, >)']
 TOTAL = 0
 EMPTY = 1
@@ -46,14 +46,14 @@ def analyse(fd, hand, mission, username):
             for i in range(2):
                 if count[i] >= 3 > count[i^1]:
                     return i ^ 1
-        if feature == 'Highest >= 95':
+        if feature == 'Highest':
             for i in range(2):
-                if highest[i] >= 95 > highest[i^1]:
+                if highest[i] >= 95 > 90 > highest[i^1]:
                     return i
         if feature == 'Lowest_Long':
             for i in range(2):
-                if lowest[i] <= 15 and lowest[i^1] <= 15:
-                    if lowest_long[i] >= 24 and 0 < lowest_long[i^1] <= 15:
+                if lowest[i] <= 18 and lowest[i^1] <= 30:
+                    if lowest_long[i] >= 22 and 0 < lowest_long[i^1] <= 14:
                         return i
         if feature == 'Distinct':
             for i in range(2):
@@ -119,7 +119,7 @@ def analyse(fd, hand, mission, username):
             for pos_pair in pos_list[bar]:
                 if pos_pair[0] > 45:
                     break
-                if pos_pair[0] > last_pos1 + 2:
+                if pos_pair[0] > last_pos1 + 3:
                     last_pos1 = pos_pair[1]
                     distinct[bar] += 1
 
@@ -194,7 +194,29 @@ def output_to_file(output_filename):
                 else:
                     print >> outfd, '%5.1f%%' % 0,
             print >> outfd, '\n'
-        print >> outfd
+
+        print >> outfd, '\\begin{table}[H]\n\centering\n\caption{title}\n%\label{tab:chap4}'
+        print >> outfd, '\\begin{tabular}{c|c|c|c|c|c|c}\n\\toprule[2pt]'
+        print >> outfd, '\multirow{2}{*}{} & \multicolumn{3}{c|}{cover} & \multicolumn{3}{c}{correct} \\\\'
+        print >> outfd, '\cline{2-7} & Left & Right & Sum & Left & Right & Sum \\\\ \midrule[1pt]'
+
+        for task in range(len(category_name)):
+            print >> outfd, '%s ' % (category_name[task]),
+            for hand in range(len(hand_name)):
+                print >> outfd, "& %.1f\%%" % (cover_time[feature][hand][task] / cover_time[TOTAL][hand][task] * 100),
+            for hand in range(len(hand_name)):
+                if cover_time[feature][hand][task] > 0:
+                    print >> outfd, "& %.1f\%%" % (acc_time[feature][hand][task] / cover_time[feature][hand][task] * 100),
+                else:
+                    print >> outfd, "& 0.0%%",
+            print >> outfd, '\\\\',
+            if task != len(category_name) - 1:
+                print >> outfd, '\hline',
+            print >> outfd
+
+        print >> outfd, '\\bottomrule[2pt]\n\end{tabular}\n\end{table}'
+        print >> outfd, '\n\n'
+
     outfd.close()
 
 def output_rate(output_filename):

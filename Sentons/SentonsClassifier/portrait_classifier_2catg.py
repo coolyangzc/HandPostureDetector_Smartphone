@@ -14,16 +14,12 @@ from sklearn.externals import joblib
 from sklearn.model_selection import KFold
 
 category = [[] for i in range(3)]
-
 category[0] = ['V_L', 'V_L_F', 'V_L_A']
 category[1] = ['V_R', 'V_R_F', 'V_R_A']
 
 eps = 1e-8
 duplicate_removal = False
 zero_removal = True
-
-feature_name = ['ONE_SIDE', 'Count >= 3', 'Highest >= 95', 'Lowest_Long',
-                'Integration(>)', 'Integration(>1)', 'Integration(empty, >)']
 
 FRAME_SKIP_L, FRAME_SKIP_R = 50, 50
 
@@ -84,6 +80,7 @@ def load_data():
 
 def new_user_test():
 
+    prob_list = []
     prob_time, tot_time = [0, 0, 0], [0, 0, 0]
     prob_matrix = [[0, 0], [0, 0]]
 
@@ -123,10 +120,13 @@ def new_user_test():
                         features.append(highest[bar])
                         features.append(lowest[bar])
                         features.append(lowest_long[bar])
+                    n, edge = data_to_edge(data)
                     if i == j:
-                        X_test.append(features)
+                        X_test.append(edge)
+                        #X_test.append(features)
                     else:
-                        X_train.append(features)
+                        X_train.append(edge)
+                        #X_train.append(features)
                 if i == j:
                     y_test = y[j]
                     w_test = weight[j]
@@ -134,27 +134,54 @@ def new_user_test():
                     y_train.extend(y[j])
                     w_train.extend(weight[j])
             print 'Start training on ' + str(len(X_train)) + ' data'
-            clf = tree.DecisionTreeClassifier(max_leaf_nodes=128)
-            #clf = RandomForestClassifier(n_estimators=100, max_leaf_nodes=8)
-            #clf = neighbors.KNeighborsClassifier(100, 'distance', 'auto', p=1)
+            #clf = tree.DecisionTreeClassifier(max_leaf_nodes=128)
+            clf = RandomForestClassifier(n_estimators=100, max_leaf_nodes=128)
+            #clf = neighbors.KNeighborsClassifier(100, 'uniform', 'kd_tree')
             #clf = GradientBoostingClassifier(n_estimators=100, max_leaf_nodes=8)
-            clf.fit(X_train, y_train, w_train)
-            print clf.feature_importances_
+            w_train = np.array(w_train)
+            clf.fit(X_train, y_train)#, w_train)
+            #print clf.feature_importances_
             print 'training accuracy: ' + str(clf.score(X_train, y_train, w_train))
 
             prob = clf.predict_proba(X_test)
             test_res = clf.predict(X_test)
             for i in range(len(prob)):
                 tot_time[y_test[i]] += w_test[i]
-                if max(prob[i][0], prob[i][1]) >= 0.98:
-                    prob_time[y_test[i]] += w_test[i]
-                    prob_matrix[test_res[i]][y_test[i]] += w_test[i]
+                prob_list.append((max(prob[i][0], prob[i][1]), y_test[i], test_res[i], w_test[i]))
 
-            #test_acc = clf.score(X_test, y_test, w_test)
-            #print 'test accuracy: ' + str(test_acc)
-            #acc.append(test_acc)
+            test_acc = clf.score(X_test, y_test, w_test)
+            print 'test accuracy: ' + str(test_acc)
+            acc.append(test_acc)
             print
-        #print "Final accuracy: " + str(np.mean(acc))
+        print "Final accuracy: " + str(np.mean(acc))
+
+        prob_list.sort()
+        prob_list.reverse()
+        ratio = 0.1
+        sum_time = tot_time[0] + tot_time[1]
+        for i in range(len(prob_list)):
+            pair = prob_list[i]
+            prob_time[pair[1]] += pair[3]
+            prob_matrix[pair[1]][pair[2]] += pair[3]
+            if (prob_time[0] + prob_time[1]) >= sum_time * ratio:
+                print "Ratio: " + str(ratio)
+                for i in range(2):
+                    tot = 0
+                    for j in range(2):
+                        tot += prob_matrix[i][j]
+                    if tot > 0:
+                        for j in range(2):
+                            print "%.2f%%" % (prob_matrix[i][j] / tot * 100),
+                    print
+                tot_time[2] = tot_time[0] + tot_time[1]
+                prob_time[2] = prob_time[0] + prob_time[1]
+                for i in range(3):
+                    print "%.2f%%" % (prob_time[i] / tot_time[i] * 100),
+                print
+                print "Accuracy: %.2f%%" % ((prob_matrix[0][0] + prob_matrix[1][1]) / (prob_time[0] + prob_time[1]) * 100)
+                print
+                ratio += 0.1
+
 
     def feature_calc():
 
@@ -172,8 +199,8 @@ def new_user_test():
                 prob_time[y_test[i]] += w_test[i]
                 prob_matrix[y_test[i]][iden.result[p]] += w_test[i]
 
-    #machine_learning()
-    feature_calc()
+    machine_learning()
+    #feature_calc()
     for i in range(2):
         tot = 0
         for j in range(2):
