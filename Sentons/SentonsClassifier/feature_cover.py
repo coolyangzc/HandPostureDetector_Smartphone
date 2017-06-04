@@ -15,7 +15,7 @@ category[1] = ['V_R', 'V_R_F', 'V_R_A']
 hand_name = ['L', 'R', 'Sum']
 feature_name = ['TOTAL', 'Empty', 'ONE_SIDE', 'Count >= 3', 'Highest', 'Lowest_Long', 'Distinct',
                 'Integration(>)', 'Integration(>1)', 'Integration(>2)',
-                'Time(5, >)', 'Integration(empty, 5, >)']
+                'Time(5, >)', 'Integration(empty, 100)']
 TOTAL = 0
 EMPTY = 1
 INTEGRATION_EMPTY = -1
@@ -111,7 +111,7 @@ def analyse(fd, hand, mission, username):
             cover_time[EMPTY][hand][task] += frame_time
             acc_time[EMPTY][hand][task] += frame_time
             vote = [0, 0]
-            for res in predict_result[max(0, len(predict_result) - 5):]:
+            for res in predict_result[max(0, len(predict_result) - 100):]:
                 for i in range(2):
                     vote[i] += res[i]
             for i in range(2):

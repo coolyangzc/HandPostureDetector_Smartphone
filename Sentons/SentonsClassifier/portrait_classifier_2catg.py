@@ -25,7 +25,7 @@ FRAME_SKIP_L, FRAME_SKIP_R = 50, 50
 
 X = [[]]
 y = [[]]
-weight = [[]]
+w = [[]]
 
 
 def process(fd, catg, user_id):
@@ -47,7 +47,7 @@ def process(fd, catg, user_id):
             continue
         X[user_id].append(data)
         y[user_id].append(catg)
-        weight[user_id].append(time - last_time)
+        w[user_id].append(time - last_time)
 
 
 def load_data():
@@ -65,7 +65,7 @@ def load_data():
                         user_id += 1
                         X.append([])
                         y.append([])
-                        weight.append([])
+                        w.append([])
                     if last_parent != parent:
                         last_parent = parent
                         print 'Reading ' + parent
@@ -129,10 +129,10 @@ def new_user_test():
                         #X_train.append(features)
                 if i == j:
                     y_test = y[j]
-                    w_test = weight[j]
+                    w_test = w[j]
                 else:
                     y_train.extend(y[j])
-                    w_train.extend(weight[j])
+                    w_train.extend(w[j])
             print 'Start training on ' + str(len(X_train)) + ' data'
             clf = tree.DecisionTreeClassifier(max_leaf_nodes=128)
             #clf = RandomForestClassifier(n_estimators=100, max_leaf_nodes=128)
@@ -189,7 +189,7 @@ def new_user_test():
         for i in range(len(X)):
             X_test.extend(X[i])
             y_test.extend(y[i])
-            w_test.extend(weight[i])
+            w_test.extend(w[i])
         for i in range(len(X_test)):
             f = data_to_features(X_test[i])
             iden = features_to_identifiers(f)
@@ -221,7 +221,7 @@ def all_user_test():
     for i in range(len(X)):
         X_tot.extend(X[i])
         y_tot.extend(y[i])
-        w_tot.extend(weight[i])
+        w_tot.extend(w[i])
     X_tot = np.array(X_tot)
     y_tot = np.array(y_tot)
     w_tot = np.array(w_tot)
@@ -248,6 +248,35 @@ def all_user_test():
 
     print "===========Final Result==========="
     print "Final accuracy: " + str(np.mean(acc))
+
+
+def single_user_test():
+    kf = KFold(n_splits=5, shuffle=True)
+    user_acc = []
+    for i in range(len(X)):
+        X_tot = []
+        for j in range(len(X[i])):
+            X_tot.append(data_to_edge(X[i][j])[1])
+        X_tot = np.array(X_tot)
+        y_tot = np.array(y[i])
+        w_tot = np.array(w[i])
+
+        kf.get_n_splits(X_tot)
+        acc = []
+        for k, (train_index, test_index) in enumerate(kf.split(X_tot, y_tot, w_tot)):
+            X_train, X_test = X_tot[train_index], X_tot[test_index]
+            y_train, y_test = y_tot[train_index], y_tot[test_index]
+            w_train, w_test = w_tot[train_index], w_tot[test_index]
+            clf = tree.DecisionTreeClassifier(max_leaf_nodes=128)
+            clf.fit(X_train, y_train, w_train)
+            #print 'training accuracy: ' + str(clf.score(X_train, y_train, w_train))
+            test_acc = clf.score(X_test, y_test, w_test)
+            #print 'test accuracy: ' + str(test_acc)
+            acc.append(test_acc)
+        print 'User Acc:' + str(np.mean(acc))
+        user_acc.append(np.mean(acc))
+
+    print 'Users Average Acc:' + str(np.mean(user_acc))
 
 
 def train_model():
@@ -280,7 +309,8 @@ def train_model():
     joblib.dump(clf, 'dts.pkl')
 
 load_data()
-new_user_test()
+single_user_test()
+#new_user_test()
 #all_user_test()
 #train_model()
 
