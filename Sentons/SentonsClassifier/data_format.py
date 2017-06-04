@@ -1,5 +1,5 @@
 EDGE_MM = 116
-CONST = True
+CONST = False
 PIXELS = 128
 
 #bar: L = 1, R = 0
@@ -105,7 +105,7 @@ def data_to_features(data):
         for pos_pair in f.pos_list[bar]:
             if pos_pair[0] > 45:
                 break
-            if pos_pair[0] > last_pos1 + 2:
+            if pos_pair[0] > last_pos1 + 3:
                 last_pos1 = pos_pair[1]
                 f.distinct[bar] += 1
     return f

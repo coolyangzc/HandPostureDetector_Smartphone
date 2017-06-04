@@ -1,4 +1,5 @@
 import os.path
+from data_format import data_to_features
 
 dir = "..\Sentons_Data"
 
@@ -40,24 +41,24 @@ def analyse(fd, hand, mission, username):
             return hand
         if feature == 'ONE_SIDE':
             for i in range(2):
-                if count[i] == 0:
+                if f.count[i] == 0:
                     return i ^ 1
         if feature == 'Count >= 3':
             for i in range(2):
-                if count[i] >= 3 > count[i^1]:
+                if f.count[i] >= 3 > f.count[i^1]:
                     return i ^ 1
         if feature == 'Highest':
             for i in range(2):
-                if highest[i] >= 95 > 90 > highest[i^1]:
+                if f.highest[i] >= 95 > 90 > f.highest[i^1]:
                     return i
         if feature == 'Lowest_Long':
             for i in range(2):
-                if lowest[i] <= 18 and lowest[i^1] <= 30:
-                    if lowest_long[i] >= 22 and 0 < lowest_long[i^1] <= 14:
+                if f.lowest[i] <= 18 and f.lowest[i^1] <= 30:
+                    if f.lowest_long[i] >= 22 and 0 < f.lowest_long[i^1] <= 14:
                         return i
         if feature == 'Distinct':
             for i in range(2):
-                if distinct[i] > distinct[i^1] == 1:
+                if f.distinct[i] > f.distinct[i^1] == 1:
                     return i^1
         if feature == 'Integration(>)':
             for i in range(2):
@@ -87,45 +88,10 @@ def analyse(fd, hand, mission, username):
             continue
         if last_time == -1:
             continue
-        n = int(data[0])
-        area, forces, count, gravity, lowest_long, highest, longest, distinct = ([0, 0] for i in range(8))
-        lowest = [116, 116]
-        pos_list = [[], []]
-        p = 1
-        for touch in range(n):
-            bar = int(data[p]) ^ 1
-            force = int(data[p + 2])
-            pos0 = float(data[p + 4])
-            pos1 = float(data[p + 5])
-            if force == 0:
-                continue
-            pos_list[bar].append((pos0, pos1))
-            count[bar] += 1
-            forces[bar] += force
-            area[bar] += force * (pos1 - pos0)
-            gravity[bar] += force * (pos1 - pos0) * (pos0 + pos1) / 2
-            if pos0 < lowest[bar]:
-                lowest[bar] = pos0
-                lowest_long[bar] = pos1 - pos0
-            highest[bar] = max(highest[bar], pos1)
-            longest[bar] = max(longest[bar], pos1 - pos0)
-            p += 6
-
-        for bar in range(2):
-            if area[bar] != 0:
-                gravity[bar] /= area[bar]
-            pos_list[bar].sort()
-            last_pos1 = -100
-            for pos_pair in pos_list[bar]:
-                if pos_pair[0] > 45:
-                    break
-                if pos_pair[0] > last_pos1 + 3:
-                    last_pos1 = pos_pair[1]
-                    distinct[bar] += 1
+        f = data_to_features(data)
 
         frame_time = time - last_time
-        sum_area = area[0] + area[1]
-        if zero_removal and sum_area == 0:
+        if zero_removal and (f.area[0] + f.area[1]) == 0:
             cover_time[EMPTY][hand][task] += frame_time
             acc_time[EMPTY][hand][task] += frame_time
             for i in range(2):
@@ -134,7 +100,6 @@ def analyse(fd, hand, mission, username):
                     if hand == i:
                         acc_time[INTEGRATION_EMPTY][hand][task] += frame_time
             continue
-
 
         predict[0] = predict[1] = 0
         for feature in range(len(feature_name)):

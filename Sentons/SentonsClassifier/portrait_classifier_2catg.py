@@ -134,8 +134,8 @@ def new_user_test():
                     y_train.extend(y[j])
                     w_train.extend(weight[j])
             print 'Start training on ' + str(len(X_train)) + ' data'
-            #clf = tree.DecisionTreeClassifier(max_leaf_nodes=128)
-            clf = RandomForestClassifier(n_estimators=100, max_leaf_nodes=128)
+            clf = tree.DecisionTreeClassifier(max_leaf_nodes=128)
+            #clf = RandomForestClassifier(n_estimators=100, max_leaf_nodes=128)
             #clf = neighbors.KNeighborsClassifier(100, 'uniform', 'kd_tree')
             #clf = GradientBoostingClassifier(n_estimators=100, max_leaf_nodes=8)
             w_train = np.array(w_train)
