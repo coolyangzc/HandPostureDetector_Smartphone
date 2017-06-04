@@ -14,7 +14,8 @@ category[1] = ['V_R', 'V_R_F', 'V_R_A']
 
 hand_name = ['L', 'R', 'Sum']
 feature_name = ['TOTAL', 'Empty', 'ONE_SIDE', 'Count >= 3', 'Highest', 'Lowest_Long', 'Distinct',
-                'Integration(>)', 'Integration(>1)', 'Integration(empty, >)']
+                'Integration(>)', 'Integration(>1)', 'Integration(>2)',
+                'Time(5, >)', 'Integration(empty, 5, >)']
 TOTAL = 0
 EMPTY = 1
 INTEGRATION_EMPTY = -1
@@ -35,7 +36,7 @@ zero_removal = True
 
 def analyse(fd, hand, mission, username):
 
-    def calc_feature(used_feature):
+    def calc_feature(used_feature, hand):
         feature = feature_name[used_feature]
         if feature == 'TOTAL':
             return hand
@@ -68,6 +69,19 @@ def analyse(fd, hand, mission, username):
             for i in range(2):
                 if predict[i] > predict[i^1] + 1:
                     return i
+        if feature == 'Integration(>2)':
+            for i in range(2):
+                if predict[i] > predict[i^1] + 2:
+                    return i
+        if feature == 'Time(5, >)':
+            vote = [0, 0]
+            for res in predict_result[max(0, len(predict_result) - 5):]:
+                for i in range(2):
+                    vote[i] += res[i]
+            #print vote, hand
+            for i in range(2):
+                if vote[i] > vote[i^1]:
+                    return i
         if feature == 'Empty' or 'Integration(empty, >)':
             return -1
         return -1
@@ -79,6 +93,8 @@ def analyse(fd, hand, mission, username):
     lines = fd.readlines()
     last_data = []
     time = -1
+
+    predict_result = []
     predict = [0, 0]
     for line in lines[2 + FRAME_SKIP_L: -FRAME_SKIP_R]:
         last_time = time
@@ -94,25 +110,35 @@ def analyse(fd, hand, mission, username):
         if zero_removal and (f.area[0] + f.area[1]) == 0:
             cover_time[EMPTY][hand][task] += frame_time
             acc_time[EMPTY][hand][task] += frame_time
+            vote = [0, 0]
+            for res in predict_result[max(0, len(predict_result) - 5):]:
+                for i in range(2):
+                    vote[i] += res[i]
             for i in range(2):
-                if predict[i] > predict[i^1]:
+                if vote[i] > vote[i^1]:
                     cover_time[INTEGRATION_EMPTY][hand][task] += frame_time
                     if hand == i:
                         acc_time[INTEGRATION_EMPTY][hand][task] += frame_time
+            #predict_result.append((0, 0))
             continue
 
         predict[0] = predict[1] = 0
         for feature in range(len(feature_name)):
-            res = calc_feature(feature)
+            res = calc_feature(feature, hand)
             if res == -1:
                 continue
-            if feature != 0 and not feature_name[feature].startswith('Integration'):
+            if feature != 0 and not feature_name[feature].startswith('Integration')\
+                            and not feature_name[feature].startswith('Time'):
                 predict[res] += 1
             cover_time[feature][hand][task] += frame_time
             if hand == res:
                 acc_time[feature][hand][task] += frame_time
+        x = predict[0]
+        y = predict[1]
+        predict_result.append((x, y))
         last_data = data
 
+    #print predict_result
 
 def output_to_file(output_filename):
     for feature in range(len(feature_name)):
