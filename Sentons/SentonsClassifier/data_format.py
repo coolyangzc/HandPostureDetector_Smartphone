@@ -1,5 +1,5 @@
 EDGE_MM = 116
-CONST = False
+CONST = True
 PIXELS = 128
 
 #bar: L = 1, R = 0
@@ -12,6 +12,15 @@ class features:
         self.pos_list = [[], []]
         self.lowest = [116, 116]
 
+    def to_vector(self):
+        f = []
+        for hand in range(2):
+            f.append(self.count[hand])
+            f.append(self.lowest[hand])
+            f.append(self.highest[hand])
+            f.append(self.distinct[hand])
+            f.append(self.lowest_long[hand])
+        return f
 
 class identifiers:
     def __init__(self):

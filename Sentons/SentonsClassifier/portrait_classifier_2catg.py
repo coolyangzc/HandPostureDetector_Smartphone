@@ -256,7 +256,9 @@ def single_user_test():
     for i in range(len(X)):
         X_tot = []
         for j in range(len(X[i])):
-            X_tot.append(data_to_edge(X[i][j])[1])
+            #X_tot.append(data_to_edge(X[i][j])[1])
+            f = data_to_features(X[i][j])
+            X_tot.append(f.to_vector())
         X_tot = np.array(X_tot)
         y_tot = np.array(y[i])
         w_tot = np.array(w[i])
@@ -267,16 +269,15 @@ def single_user_test():
             X_train, X_test = X_tot[train_index], X_tot[test_index]
             y_train, y_test = y_tot[train_index], y_tot[test_index]
             w_train, w_test = w_tot[train_index], w_tot[test_index]
-            clf = tree.DecisionTreeClassifier(max_leaf_nodes=128)
-            clf.fit(X_train, y_train, w_train)
-            #print 'training accuracy: ' + str(clf.score(X_train, y_train, w_train))
+            #clf = tree.DecisionTreeClassifier(max_leaf_nodes=128)
+            #clf = RandomForestClassifier(n_estimators=100, max_leaf_nodes=128)
+            clf = neighbors.KNeighborsClassifier(100, 'uniform', 'kd_tree')
+            clf.fit(X_train, y_train)#, w_train)
             test_acc = clf.score(X_test, y_test, w_test)
-            #print 'test accuracy: ' + str(test_acc)
             acc.append(test_acc)
         print 'User Acc:' + str(np.mean(acc))
         user_acc.append(np.mean(acc))
-
-    print 'Users Average Acc:' + str(np.mean(user_acc))
+    print 'Users Average Acc: %.2f%%' % (np.mean(user_acc) * 100)
 
 
 def train_model():
@@ -309,6 +310,7 @@ def train_model():
     joblib.dump(clf, 'dts.pkl')
 
 load_data()
+#single_user_time_test()
 single_user_test()
 #new_user_test()
 #all_user_test()
